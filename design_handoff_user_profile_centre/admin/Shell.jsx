@@ -70,7 +70,7 @@ function Sidebar({ active, onNavigate }) {
       display:'flex', flexDirection:'column', borderRight:'1px solid #E9ECF3',
     }}>
       <div style={{padding:'16px 18px 14px', display:'flex', alignItems:'center', gap:8, borderBottom:'1px solid #F2F3F8'}}>
-        <img src="../../assets/logo-full.png" alt="start.ai" style={{height:22, width:'auto'}}/>
+        <img src="../assets/logo-full.png" alt="start.ai" style={{height:22, width:'auto'}}/>
       </div>
 
       <nav style={{padding:'10px 10px', display:'flex', flexDirection:'column', gap:2, overflow:'auto', flex:1}}>
