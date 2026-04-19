@@ -2,4 +2,4 @@ name = "startai-design-system"
 compatibility_date = "2024-01-01"
 
 [assets]
-directory = "design_handoff_user_profile_centre"
+directory = "design_handoff_user_profile_centre/admin"
