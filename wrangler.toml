@@ -1,0 +1,5 @@
+name = "startai-design-system"
+compatibility_date = "2024-01-01"
+
+[assets]
+directory = "ui_kits/admin"
