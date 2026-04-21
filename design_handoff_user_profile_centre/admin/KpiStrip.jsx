@@ -1,13 +1,9 @@
-// KPI strip — matches the ref's "Projects Created / Queues Created / ..." cards.
-// Light card, label top (small gray), big number below. Keep sparkline + delta
-// as subtle enhancements since this is an analytics dashboard, not an ops count.
+// Trends strip — 4 cards: Total Labellers, Retention, Activation Rate, Avg Daily Hours
 
-const KPI_DATA = [
+const TRENDS_DATA = [
   { label:'Total Labellers',  value:'12,400', delta:'+3.2%',  deltaDir:'up',   sub:'vs prior 30d' },
-  { label:'Active (7d)',      value:'3,200',  delta:'−4.8%',  deltaDir:'down', sub:'2,400 weekly target' },
+  { label:'Retention',        value:'62%',    delta:'−2.1pp', deltaDir:'down', sub:'90d cohort' },
   { label:'Activation Rate',  value:'41.1%',  delta:'+1.4pp', deltaDir:'up',   sub:'Onboarded → Activated' },
-  { label:'30d Retention',    value:'62%',    delta:'−2.1pp', deltaDir:'down', sub:'90d cohort' },
-  { label:'Avg Accuracy',     value:'84.2%',  delta:'+0.6pp', deltaDir:'up',   sub:'Weighted by volume' },
   { label:'Avg Daily Hours',  value:'3.2h',   delta:'+0.1h',  deltaDir:'up',   sub:'Active labellers' },
 ];
 
@@ -61,25 +57,23 @@ function KpiCard({ label, value, delta, deltaDir, sub, sparkPoints, sparkColor }
   );
 }
 
-function KpiStrip() {
+function TrendsStrip() {
   const sparks = [
     [3,4,3,5,6,5,7,8,9,8,10,11],
-    [12,13,12,11,10,11,10,9,8,9,8,7],
-    [30,32,34,33,36,38,37,39,40,41,40,41],
     [70,69,68,67,66,65,64,63,63,62,62,62],
-    [82,83,82,83,84,83,84,84,85,84,84,84],
+    [30,32,34,33,36,38,37,39,40,41,40,41],
     [2.8,2.9,3.0,3.1,3.0,3.1,3.2,3.1,3.2,3.2,3.3,3.2],
   ];
-  // Unified brand blue across sparklines for cohesion
-  const colors = ['#4285F4','#4285F4','#4285F4','#4285F4','#4285F4','#4285F4'];
   return (
     <div style={{display:'flex',gap:12}}>
-      {KPI_DATA.map((k,i)=>(
-        <KpiCard key={k.label} {...k} sparkPoints={sparks[i]} sparkColor={colors[i]}/>
+      {TRENDS_DATA.map((k,i)=>(
+        <KpiCard key={k.label} {...k} sparkPoints={sparks[i]} sparkColor="#4285F4"/>
       ))}
     </div>
   );
 }
 
-window.KpiStrip = KpiStrip;
+// Keep KpiStrip alias for backward compatibility
+window.KpiStrip = TrendsStrip;
+window.TrendsStrip = TrendsStrip;
 window.Sparkline = Sparkline;
