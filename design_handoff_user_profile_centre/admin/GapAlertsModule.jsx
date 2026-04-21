@@ -4,16 +4,6 @@
 
 const ALL_GAPS = [
   {
-    id:'gap-es-latam', severity:'critical', type:'Acquisition Gap', dim:'Language', geo:'LATAM',
-    title:'Spanish · LATAM · L2',
-    required:50, available:3, pct:6,
-    note:'Blocking Legal QA — Brazil launch',
-    projects:['Legal QA Brazil', 'MedNER Spanish'],
-    score:94,
-    action:'Targeted acquisition campaign',
-    recipe:'acquisition',
-  },
-  {
     id:'gap-ph-dormant', severity:'critical', type:'Throughput Gap', dim:'Geography', geo:'Philippines',
     title:'Philippines dormant pool',
     required:2000, available:0, pct:0,
@@ -288,7 +278,7 @@ function GapsSummary({ gaps }) {
 
 // Main module
 function GapAlertsModule() {
-  const [expanded, setExpanded] = React.useState('gap-es-latam');
+  const [expanded, setExpanded] = React.useState('gap-ph-dormant');
   const [sev, setSev] = React.useState('all');
   const [dim, setDim] = React.useState('all');
   const [sort, setSort] = React.useState('score');

@@ -74,13 +74,42 @@ function GapAlertRow({ gap, onOpen }) {
 }
 function GapAlertPanel({ onOpen, onViewAll }) {
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:10}}>
-      {GAPS.map((g,i)=><GapAlertRow key={i} gap={g} onOpen={onOpen}/>)}
+    <div style={{display:"flex",flexDirection:"row",alignItems:"stretch",gap:10}}>
+      {GAPS.map((g,i)=>{
+        const s = severityStyles(g.severity);
+        return (
+          <div key={i} style={{
+            flex:1, minWidth:0, display:"flex", flexDirection:"column", gap:6,
+            padding:"10px 14px", borderRadius:8, background:"#fff",
+            border:"1px solid " + s.ring, borderLeft:"3px solid " + s.dot,
+          }}>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{
+                fontFamily:"DM Sans",fontSize:9.5,fontWeight:700,letterSpacing:".07em",textTransform:"uppercase",
+                color:s.labelColor,background:s.bg,border:"1px solid "+s.ring,padding:"1px 6px",borderRadius:999,whiteSpace:"nowrap",
+              }}>{s.label}</span>
+              <span style={{fontFamily:"DM Sans",fontSize:10.5,color:"#9AA2B1",fontWeight:500}}>{g.dim}</span>
+            </div>
+            <div style={{fontFamily:"Jost",fontSize:13,fontWeight:500,color:"#111125",lineHeight:1.2}}>{g.title}</div>
+            <div style={{fontFamily:"DM Sans",fontSize:11,color:"#6F7482",flex:1}}>{g.stat}</div>
+            <button onClick={()=>onOpen&&onOpen(g)} style={{
+              alignSelf:"flex-start",display:"inline-flex",alignItems:"center",gap:5,
+              padding:"4px 10px",background:"#4285F4",color:"#fff",border:0,borderRadius:5,
+              fontFamily:"DM Sans",fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",
+            }}>
+              <Icon name="sparkle" size={10} color="#fff"/>{g.action}
+            </button>
+          </div>
+        );
+      })}
       <button onClick={onViewAll} style={{
-        marginTop:2, alignSelf:'flex-start', background:'transparent',border:0, color:'#4285F4',
-        fontFamily:'Jost',fontSize:13,fontWeight:500,cursor:'pointer',padding:0,
-        display:'inline-flex',alignItems:'center',gap:4
-      }}>View all 4 gap alerts <Icon name="arrow-right" size={13}/></button>
+        alignSelf:"stretch",display:"inline-flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:3,
+        padding:"8px 14px",background:"transparent",border:"1px dashed #D6D9E1",borderRadius:8,
+        color:"#4285F4",fontFamily:"DM Sans",fontSize:11,fontWeight:500,cursor:"pointer",whiteSpace:"nowrap",
+      }}>
+        <Icon name="arrow-right" size={13} color="#4285F4"/>
+        View all
+      </button>
     </div>
   );
 }
