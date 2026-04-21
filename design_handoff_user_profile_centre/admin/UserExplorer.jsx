@@ -1,170 +1,156 @@
-// §6.2.2 User Explorer — segment builder + user list + profile card drill-down.
-// Left rail: filter stack (5 facets from spec).
-// Center: results table with inline actions.
-// Right panel: Individual User Profile Card.
+// §6.2.2 User Explorer — segment builder + user list + AI recommendations.
+// Left: 4 filters (country/language dropdown, accuracy bar, headcount) + submit.
+// Center: results table (AND logic, updates on Apply Filter).
+// Right: AI-generated action recommendations.
 
 // ─── Mock dataset ────────────────────────────────────────────────
 const ARCHETYPES = [
-  { key:'evergreen',  label:'Evergreen',         color:'#22C55E' },
-  { key:'push',       label:'Push Sensitive',    color:'#4285F4' },
-  { key:'incentive',  label:'Incentive Sensitive',color:'#F59E0B' },
-  { key:'potential',  label:'High Potential',    color:'#8B5CF6' },
-  { key:'unresponsive',label:'Non-Responsive',   color:'#94A3B8' },
+  { key:'evergreen',   label:'Evergreen',          color:'#22C55E' },
+  { key:'push',        label:'Push Sensitive',     color:'#4285F4' },
+  { key:'incentive',   label:'Incentive Sensitive',color:'#F59E0B' },
+  { key:'potential',   label:'High Potential',     color:'#8B5CF6' },
+  { key:'unresponsive',label:'Non-Responsive',     color:'#94A3B8' },
 ];
 const ARCH_BY = Object.fromEntries(ARCHETYPES.map(a=>[a.key,a]));
 
 const USERS = [
-  { id:'U-84219', country:'Philippines', flag:'🇵🇭', lang:'English, Tagalog', stage:'Engaged',   archetype:'evergreen',    reg:'2024-03-12', vol:'L3', acc:92, churn:8,  trajectory:'up',   lastActive:'2h ago',  volTier:'L3', accTier:'L3', consistency:'L2' },
-  { id:'U-84186', country:'Vietnam',     flag:'🇻🇳', lang:'Vietnamese',      stage:'Engaged',   archetype:'push',         reg:'2024-06-02', vol:'L2', acc:88, churn:12, trajectory:'up',   lastActive:'5h ago',  volTier:'L2', accTier:'L3', consistency:'L2' },
-  { id:'U-84991', country:'Indonesia',   flag:'🇮🇩', lang:'Bahasa Indonesia',stage:'Activated', archetype:'incentive',    reg:'2024-09-20', vol:'L1', acc:81, churn:38, trajectory:'flat', lastActive:'3d ago',  volTier:'L1', accTier:'L2', consistency:'L1' },
-  { id:'U-85440', country:'Thailand',    flag:'🇹🇭', lang:'Thai',            stage:'Engaged',   archetype:'potential',    reg:'2025-01-14', vol:'L2', acc:84, churn:18, trajectory:'up',   lastActive:'4h ago',  volTier:'L2', accTier:'L2', consistency:'L2' },
-  { id:'U-85091', country:'Philippines', flag:'🇵🇭', lang:'English',          stage:'Churned',   archetype:'unresponsive', reg:'2023-11-04', vol:'—',  acc:68, churn:94, trajectory:'down', lastActive:'92d ago', volTier:'L0', accTier:'L1', consistency:'L0' },
-  { id:'U-85612', country:'Egypt',       flag:'🇪🇬', lang:'Arabic',           stage:'Onboarded', archetype:'potential',    reg:'2025-08-19', vol:'L1', acc:77, churn:42, trajectory:'up',   lastActive:'1d ago',  volTier:'L1', accTier:'L1', consistency:'L1' },
-  { id:'U-85714', country:'Singapore',   flag:'🇸🇬', lang:'English, Malay',   stage:'Engaged',   archetype:'evergreen',    reg:'2024-05-30', vol:'L3', acc:91, churn:6,  trajectory:'up',   lastActive:'30m ago', volTier:'L3', accTier:'L3', consistency:'L3' },
-  { id:'U-84077', country:'Mexico',      flag:'🇲🇽', lang:'Spanish',          stage:'Activated', archetype:'incentive',    reg:'2025-02-22', vol:'L1', acc:79, churn:32, trajectory:'flat', lastActive:'8h ago',  volTier:'L1', accTier:'L2', consistency:'L1' },
-  { id:'U-85803', country:'Malaysia',    flag:'🇲🇾', lang:'Malay, English',   stage:'Engaged',   archetype:'push',         reg:'2024-10-11', vol:'L2', acc:86, churn:14, trajectory:'up',   lastActive:'6h ago',  volTier:'L2', accTier:'L2', consistency:'L2' },
-  { id:'U-85990', country:'Philippines', flag:'🇵🇭', lang:'English, Tagalog', stage:'Registered',archetype:'potential',    reg:'2026-03-08', vol:'—',  acc:0,  churn:60, trajectory:'flat', lastActive:'41d ago', volTier:'L0', accTier:'L0', consistency:'L0' },
+  { id:'U-84219', country:'Philippines', flag:'\uD83C\uDDF5\uD83C\uDDED', lang:'English, Tagalog',  stage:'Engaged',   archetype:'evergreen',    reg:'2024-03-12', acc:92, churn:8,  trajectory:'up',   lastActive:'2h ago',  volTier:'L3', accTier:'L3' },
+  { id:'U-84186', country:'Vietnam',     flag:'\uD83C\uDDFB\uD83C\uDDF3', lang:'Vietnamese',        stage:'Engaged',   archetype:'push',         reg:'2024-06-02', acc:88, churn:12, trajectory:'up',   lastActive:'5h ago',  volTier:'L2', accTier:'L3' },
+  { id:'U-84991', country:'Indonesia',   flag:'\uD83C\uDDEE\uD83C\uDDE9', lang:'Bahasa Indonesia',  stage:'Activated', archetype:'incentive',    reg:'2024-09-20', acc:81, churn:38, trajectory:'flat', lastActive:'3d ago',  volTier:'L1', accTier:'L2' },
+  { id:'U-85440', country:'Thailand',    flag:'\uD83C\uDDF9\uD83C\uDDED', lang:'Thai',              stage:'Engaged',   archetype:'potential',    reg:'2025-01-14', acc:84, churn:18, trajectory:'up',   lastActive:'4h ago',  volTier:'L2', accTier:'L2' },
+  { id:'U-83011', country:'Egypt',       flag:'\uD83C\uDDEA\uD83C\uDDEC', lang:'Arabic',            stage:'Registered',archetype:'unresponsive', reg:'2024-11-01', acc:72, churn:74, trajectory:'down', lastActive:'21d ago', volTier:'L1', accTier:'L1' },
+  { id:'U-85602', country:'Mexico',      flag:'\uD83C\uDDF2\uD83C\uDDFD', lang:'Spanish',           stage:'Churned',   archetype:'incentive',    reg:'2024-07-22', acc:76, churn:88, trajectory:'down', lastActive:'45d ago', volTier:'L1', accTier:'L1' },
+  { id:'U-84450', country:'Malaysia',    flag:'\uD83C\uDDF2\uD83C\uDDFE', lang:'Malay, English',    stage:'Onboarded', archetype:'potential',    reg:'2025-02-08', acc:80, churn:29, trajectory:'flat', lastActive:'6d ago',  volTier:'L1', accTier:'L2' },
+  { id:'U-84881', country:'Singapore',   flag:'\uD83C\uDDF8\uD83C\uDDEC', lang:'English',           stage:'Engaged',   archetype:'evergreen',    reg:'2024-02-14', acc:95, churn:5,  trajectory:'up',   lastActive:'1h ago',  volTier:'L3', accTier:'L3' },
+  { id:'U-85100', country:'Philippines', flag:'\uD83C\uDDF5\uD83C\uDDED', lang:'Tagalog',           stage:'Activated', archetype:'push',         reg:'2024-10-01', acc:83, churn:22, trajectory:'flat', lastActive:'2d ago',  volTier:'L2', accTier:'L2' },
+  { id:'U-85230', country:'Indonesia',   flag:'\uD83C\uDDEE\uD83C\uDDE9', lang:'Bahasa Indonesia',  stage:'Registered',archetype:'unresponsive', reg:'2025-01-03', acc:68, churn:81, trajectory:'down', lastActive:'30d ago', volTier:'L1', accTier:'L1' },
+  { id:'U-83890', country:'Vietnam',     flag:'\uD83C\uDDFB\uD83C\uDDF3', lang:'Vietnamese',        stage:'Activated', archetype:'incentive',    reg:'2024-05-14', acc:86, churn:21, trajectory:'up',   lastActive:'8h ago',  volTier:'L2', accTier:'L2' },
+  { id:'U-84760', country:'Egypt',       flag:'\uD83C\uDDEA\uD83C\uDDEC', lang:'Arabic',            stage:'Onboarded', archetype:'potential',    reg:'2025-03-01', acc:77, churn:44, trajectory:'flat', lastActive:'9d ago',  volTier:'L1', accTier:'L1' },
 ];
 
-// ─── Segment Builder (left filter rail) ──────────────────────────
-function FilterGroup({ title, children, defaultOpen=true }) {
-  const [open, setOpen] = React.useState(defaultOpen);
+// Language pool capacity (total available in full dataset, for gap analysis)
+const LANG_POOL = {
+  English:820, Spanish:62, Arabic:180, Vietnamese:420, Thai:280,
+  'Bahasa Indonesia':550, Malay:220, Tagalog:380,
+};
+
+// ─── Multi-select dropdown ──────────────────────────────────────
+function MultiSelect({ label, options, value, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const h = e => { if(ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  const toggle = opt => onChange(value.includes(opt) ? value.filter(v=>v!==opt) : [...value, opt]);
+  const display = value.length === 0 ? 'All'
+    : value.length <= 2 ? value.join(', ')
+    : value.slice(0,2).join(', ') + ' +' + (value.length-2);
   return (
-    <div style={{borderBottom:'1px solid #F2F3F8'}}>
+    <div ref={ref} style={{position:'relative'}}>
+      <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',marginBottom:4,fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}>{label}</div>
       <button onClick={()=>setOpen(!open)} style={{
-        width:'100%', padding:'12px 14px', display:'flex', alignItems:'center', justifyContent:'space-between',
-        background:'transparent', border:0, cursor:'pointer',
-        fontFamily:'DM Sans', fontSize:11.5, fontWeight:700, letterSpacing:'.06em',
-        textTransform:'uppercase', color:'#6F7482'
+        width:'100%', padding:'7px 10px', border:'1px solid #E1E4EC', borderRadius:7, background:'#fff',
+        display:'flex', alignItems:'center', justifyContent:'space-between', cursor:'pointer',
+        fontFamily:'DM Sans', fontSize:12, color: value.length ? '#111125' : '#9AA2B1', boxSizing:'border-box',
       }}>
-        {title}
-        <Icon name={open?'chevron-down':'chevron-right'} size={12} color="#6F7482"/>
+        <span style={{overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'85%',textAlign:'left'}}>{display}</span>
+        <Icon name={open?'chevron-down':'chevron-right'} size={11} color="#6F7482"/>
       </button>
-      {open && <div style={{padding:'0 14px 14px', display:'flex', flexDirection:'column', gap:8}}>{children}</div>}
+      {open && (
+        <div style={{
+          position:'absolute', top:'calc(100% + 3px)', left:0, right:0, zIndex:200,
+          background:'#fff', border:'1px solid #E1E4EC', borderRadius:8,
+          boxShadow:'0 6px 20px rgba(0,0,0,.1)', maxHeight:200, overflowY:'auto',
+        }}>
+          {options.map(opt=>(
+            <label key={opt} style={{
+              display:'flex', alignItems:'center', gap:8, padding:'7px 12px', cursor:'pointer',
+              background: value.includes(opt) ? '#F4F8FF' : 'transparent',
+              borderBottom:'1px solid #F9F9FB',
+            }}
+              onMouseEnter={e=>{ if(!value.includes(opt)) e.currentTarget.style.background='#FAFBFC'; }}
+              onMouseLeave={e=>{ e.currentTarget.style.background = value.includes(opt) ? '#F4F8FF' : 'transparent'; }}
+            >
+              <input type="checkbox" checked={value.includes(opt)} onChange={()=>toggle(opt)}
+                style={{accentColor:'#4285F4',width:13,height:13,flexShrink:0,cursor:'pointer'}}/>
+              <span style={{fontFamily:'DM Sans',fontSize:12,color:'#111125'}}>{opt}</span>
+            </label>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function Chip({ label, active, onClick, color }) {
+// ─── Accuracy progress bar ──────────────────────────────────────
+function AccuracyBar({ value, onChange }) {
+  const color = value >= 85 ? '#22C55E' : value >= 70 ? '#F59E0B' : '#F44336';
   return (
-    <button onClick={onClick} style={{
-      padding:'5px 10px', borderRadius:999, cursor:'pointer',
-      border:`1px solid ${active ? (color||'#4285F4') : '#E1E4EC'}`,
-      background: active ? (color?`${color}15`:'#EAF1FE') : '#fff',
-      color: active ? (color||'#1E4FA8') : '#2C2C2C',
-      fontFamily:'DM Sans', fontSize:11.5, fontWeight: active ? 600 : 500,
-      display:'inline-flex', alignItems:'center', gap:5
-    }}>
-      {active && color && <span style={{width:6,height:6,borderRadius:99,background:color}}/>}
-      {label}
-    </button>
-  );
-}
-
-function Slider({ label, value, min, max, suffix='', onChange }) {
-  return (
-    <div style={{display:'flex',flexDirection:'column',gap:4}}>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',fontFamily:'DM Sans',fontSize:11.5}}>
-        <span style={{color:'#2C2C2C'}}>{label}</span>
-        <span style={{fontFamily:'Jost',fontWeight:600,color:'#111125',fontVariantNumeric:'tabular-nums'}}>≤ {value}{suffix}</span>
+    <div style={{display:'flex',flexDirection:'column',gap:5}}>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <span style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}>Min accuracy</span>
+        <span style={{fontFamily:'Jost',fontSize:13,fontWeight:700,color:color,fontVariantNumeric:'tabular-nums'}}>{value}%</span>
       </div>
-      <input type="range" min={min} max={max} value={value} onChange={e=>onChange(+e.target.value)} style={{
-        width:'100%', accentColor:'#4285F4'
-      }}/>
+      <div style={{position:'relative',height:8,background:'#F2F3F8',borderRadius:999}}>
+        <div style={{width:value+'%',height:'100%',background:color,borderRadius:999,transition:'width .15s'}}/>
+      </div>
+      <input type="range" min={0} max={100} value={value}
+        onChange={e=>onChange(+e.target.value)}
+        style={{width:'100%',accentColor:color}}/>
     </div>
   );
 }
 
-function SegmentBuilder({ filters, setFilters, resultCount }) {
-  const toggle = (key, val) => {
-    const cur = filters[key] || [];
-    setFilters({...filters, [key]: cur.includes(val) ? cur.filter(v=>v!==val) : [...cur, val]});
-  };
-  const has = (key, val) => (filters[key]||[]).includes(val);
-
+// ─── Segment Builder ───────────────────────────────────────────
+function SegmentBuilder({ draft, setDraft, onSubmit, resultCount }) {
+  const reset = () => setDraft({ country:[], lang:[], minAcc:0, headcount:'' });
   return (
     <aside style={{
-      width:260, flexShrink:0, background:'#fff', border:'1px solid #E9ECF3',
-      borderRadius:12, display:'flex', flexDirection:'column', overflow:'hidden',
-      alignSelf:'flex-start', maxHeight:'calc(100vh - 200px)'
+      width:240, flexShrink:0, background:'#fff', border:'1px solid #E9ECF3',
+      borderRadius:12, display:'flex', flexDirection:'column', overflow:'visible',
+      alignSelf:'flex-start',
     }}>
-      <div style={{padding:'14px 14px 12px', borderBottom:'1px solid #F2F3F8', display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8}}>
-        <div style={{minWidth:0,flex:1}}>
-          <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125',lineHeight:1.2}}>Segment builder</div>
-          <div style={{fontFamily:'DM Sans',fontSize:11,color:'#6F7482',marginTop:3}}>{resultCount.toLocaleString()} users match</div>
+      <div style={{padding:'14px 14px 10px', borderBottom:'1px solid #F2F3F8', display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div>
+          <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125'}}>Segment filters</div>
+          <div style={{fontFamily:'DM Sans',fontSize:11,color:'#6F7482',marginTop:2}}>{resultCount.toLocaleString()} users matched</div>
         </div>
-        <button onClick={()=>setFilters({})} style={{
-          background:'transparent',border:0,cursor:'pointer',fontFamily:'DM Sans',fontSize:11,color:'#4285F4',fontWeight:500,padding:'2px 0',flexShrink:0
-        }}>Reset</button>
+        <button onClick={reset} style={{background:'transparent',border:0,cursor:'pointer',fontFamily:'DM Sans',fontSize:11,color:'#4285F4',fontWeight:500}}>Reset</button>
       </div>
 
-      <div style={{overflow:'auto', flex:1}}>
-        <FilterGroup title="Inherent traits">
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',marginTop:2}}>Country</div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-            {['Philippines','Indonesia','Vietnam','Thailand','Egypt','Mexico','Malaysia','Singapore'].map(c=>(
-              <Chip key={c} label={c} active={has('country',c)} onClick={()=>toggle('country',c)}/>
-            ))}
+      <div style={{padding:'14px', display:'flex', flexDirection:'column', gap:14, overflow:'visible'}}>
+        <MultiSelect label="Country"
+          options={['Philippines','Indonesia','Vietnam','Thailand','Egypt','Mexico','Malaysia','Singapore']}
+          value={draft.country||[]} onChange={v=>setDraft({...draft,country:v})}/>
+        <MultiSelect label="Language"
+          options={['English','Spanish','Arabic','Vietnamese','Thai','Bahasa Indonesia','Malay','Tagalog']}
+          value={draft.lang||[]} onChange={v=>setDraft({...draft,lang:v})}/>
+        <AccuracyBar value={draft.minAcc||0} onChange={v=>setDraft({...draft,minAcc:v})}/>
+        <div>
+          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',marginBottom:4,fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}>Headcount requirement</div>
+          <div style={{position:'relative'}}>
+            <input type="number" min={1} placeholder="e.g. 50"
+              value={draft.headcount||''}
+              onChange={e=>setDraft({...draft,headcount:e.target.value})}
+              style={{
+                width:'100%', padding:'7px 32px 7px 10px', border:'1px solid #E1E4EC', borderRadius:7,
+                fontFamily:'Jost', fontSize:13, color:'#111125', background:'#fff',
+                outline:'none', boxSizing:'border-box',
+              }}/>
+            <span style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',fontFamily:'DM Sans',fontSize:10.5,color:'#9AA2B1',pointerEvents:'none'}}>users</span>
           </div>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',marginTop:8}}>Language</div>
-          <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-            {['English','Spanish','Arabic','Vietnamese','Thai','Bahasa','Malay','Tagalog'].map(l=>(
-              <Chip key={l} label={l} active={has('lang',l)} onClick={()=>toggle('lang',l)}/>
-            ))}
-          </div>
-        </FilterGroup>
-
-        <FilterGroup title="Lifecycle stage">
-          <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-            {['Registered','Onboarded','Activated','Engaged','Churned'].map(s=>(
-              <Chip key={s} label={s} active={has('stage',s)} onClick={()=>toggle('stage',s)}/>
-            ))}
-          </div>
-          <Slider label="Days since last active" value={filters.daysInactive||90} min={0} max={180} suffix="d" onChange={v=>setFilters({...filters,daysInactive:v})}/>
-        </FilterGroup>
-
-        <FilterGroup title="Performance">
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482'}}>Volume tier</div>
-          <div style={{display:'flex',gap:5}}>
-            {['L1','L2','L3'].map(t=><Chip key={t} label={t} active={has('volTier',t)} onClick={()=>toggle('volTier',t)}/>)}
-          </div>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',marginTop:8}}>Accuracy tier</div>
-          <div style={{display:'flex',gap:5}}>
-            {['L1','L2','L3'].map(t=><Chip key={t} label={t} active={has('accTier',t)} onClick={()=>toggle('accTier',t)}/>)}
-          </div>
-          <Slider label="Min accuracy" value={filters.minAcc||0} min={0} max={100} suffix="%" onChange={v=>setFilters({...filters,minAcc:v})}/>
-        </FilterGroup>
-
-        <FilterGroup title="Behavioural — archetype">
-          <div style={{display:'flex',flexWrap:'wrap',gap:5}}>
-            {ARCHETYPES.map(a=>(
-              <Chip key={a.key} label={a.label} active={has('archetype',a.key)} onClick={()=>toggle('archetype',a.key)} color={a.color}/>
-            ))}
-          </div>
-        </FilterGroup>
-
-        <FilterGroup title="Predictive">
-          <Slider label="Max churn risk" value={filters.maxChurn||100} min={0} max={100} suffix="%" onChange={v=>setFilters({...filters,maxChurn:v})}/>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',marginTop:8}}>Quality trajectory</div>
-          <div style={{display:'flex',gap:5}}>
-            {['up','flat','down'].map(t=><Chip key={t} label={t} active={has('trajectory',t)} onClick={()=>toggle('trajectory',t)}/>)}
-          </div>
-        </FilterGroup>
+        </div>
       </div>
 
-      <div style={{padding:12, borderTop:'1px solid #F2F3F8', display:'flex', gap:8}}>
-        <button style={{
-          flex:1, padding:'9px 12px', background:'#4285F4', color:'#fff', border:0, borderRadius:7,
+      <div style={{padding:'12px 14px', borderTop:'1px solid #F2F3F8'}}>
+        <button onClick={onSubmit} style={{
+          width:'100%', padding:'9px', background:'#4285F4', color:'#fff', border:0, borderRadius:7,
           fontFamily:'DM Sans',fontSize:12.5,fontWeight:600,cursor:'pointer',
-          display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6
+          display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6,
         }}>
-          <Icon name="download" size={13} color="#fff"/> Export to campaign
-        </button>
-        <button title="Save segment" style={{
-          width:36, height:34, border:'1px solid #E1E4EC', background:'#fff', borderRadius:7,
-          cursor:'pointer', display:'grid', placeItems:'center'
-        }}>
-          <Icon name="tag" size={14} color="#2C2C2C"/>
+          <Icon name="filter" size={13} color="#fff"/> Apply Filter
         </button>
       </div>
     </aside>
@@ -173,388 +159,322 @@ function SegmentBuilder({ filters, setFilters, resultCount }) {
 
 // ─── User Table ────────────────────────────────────────────────
 function TierPill({ tier }) {
-  const map = { L0:'#94A3B8', L1:'#CBD5E1', L2:'#7CA9FC', L3:'#4285F4', '—':'#CBD5E1' };
-  const filled = tier==='L3' ? '#4285F4' : tier==='L2' ? '#7CA9FC' : tier==='L1' ? '#9DC6FF' : '#E1E6F0';
-  const fg = tier==='L3'||tier==='L2' ? '#fff' : '#2C2C2C';
-  return <span style={{
-    display:'inline-block', padding:'2px 7px', borderRadius:4, fontFamily:'Jost', fontSize:11, fontWeight:600,
-    background:filled, color:fg, minWidth:28, textAlign:'center'
-  }}>{tier}</span>;
+  const filled = tier==='L3'?'#4285F4':tier==='L2'?'#7CA9FC':tier==='L1'?'#9DC6FF':'#E1E6F0';
+  const fg = (tier==='L3'||tier==='L2')?'#fff':'#2C2C2C';
+  return <span style={{display:'inline-block',padding:'2px 7px',borderRadius:4,fontFamily:'Jost',fontSize:11,fontWeight:600,background:filled,color:fg,minWidth:28,textAlign:'center'}}>{tier}</span>;
 }
-
 function ArchetypeBadge({ kind }) {
-  const a = ARCH_BY[kind];
-  if(!a) return null;
-  return <span style={{
-    display:'inline-flex', alignItems:'center', gap:5, padding:'2px 7px', borderRadius:999,
-    background:`${a.color}15`, border:`1px solid ${a.color}40`, color:a.color,
-    fontFamily:'DM Sans', fontSize:10.5, fontWeight:600, whiteSpace:'nowrap'
-  }}>
-    <span style={{width:5,height:5,borderRadius:99,background:a.color}}/>
-    {a.label}
-  </span>;
+  const a = ARCH_BY[kind]; if(!a) return null;
+  return <span style={{display:'inline-flex',alignItems:'center',gap:5,padding:'2px 7px',borderRadius:999,background:a.color+'15',border:'1px solid '+a.color+'40',color:a.color,fontFamily:'DM Sans',fontSize:10.5,fontWeight:600,whiteSpace:'nowrap'}}>
+    <span style={{width:5,height:5,borderRadius:99,background:a.color}}/>{a.label}</span>;
 }
-
 function TrajectoryArrow({ t }) {
   if(t==='up') return <Icon name="trending-up" size={13} color="#22C55E"/>;
   if(t==='down') return <Icon name="trending-down" size={13} color="#F44336"/>;
   return <span style={{width:13,height:1,background:'#CBD5E1',display:'inline-block'}}/>;
 }
-
 function UserRow({ user, onOpen, selected, onToggleSelect }) {
   return (
-    <tr style={{borderTop:'1px solid #F2F3F8', background: selected ? '#F8FBFF' : '#fff'}}>
-      <td style={{padding:'10px 12px'}}>
-        <input type="checkbox" checked={selected} onChange={onToggleSelect} style={{accentColor:'#4285F4'}}/>
+    <tr style={{borderTop:'1px solid #F2F3F8',background:selected?'#F8FBFF':'#fff'}}>
+      <td style={{padding:'9px 12px'}}><input type="checkbox" checked={selected} onChange={onToggleSelect} style={{accentColor:'#4285F4'}}/></td>
+      <td style={{padding:'9px 4px',fontFamily:'Jost',fontSize:12.5,color:'#111125',fontWeight:500}}>
+        <button onClick={onOpen} style={{background:'transparent',border:0,padding:0,color:'#4285F4',fontFamily:'inherit',fontSize:'inherit',fontWeight:'inherit',cursor:'pointer',textDecoration:'underline',textUnderlineOffset:2}}>{user.id}</button>
       </td>
-      <td style={{padding:'10px 4px', fontFamily:'Jost', fontSize:12.5, color:'#111125', fontWeight:500}}>
-        <button onClick={onOpen} style={{background:'transparent',border:0,padding:0,color:'#111125',fontFamily:'inherit',fontSize:'inherit',fontWeight:'inherit',cursor:'pointer',textDecoration:'underline',textDecorationColor:'transparent',textUnderlineOffset:2}} onMouseEnter={e=>e.currentTarget.style.textDecorationColor='#4285F4'} onMouseLeave={e=>e.currentTarget.style.textDecorationColor='transparent'}>
-          {user.id}
+      <td style={{padding:'9px 4px',fontFamily:'DM Sans',fontSize:12,color:'#2C2C2C'}}>
+        <span style={{display:'inline-flex',alignItems:'center',gap:5}}><span style={{fontSize:13}}>{user.flag}</span>{user.country}</span>
+      </td>
+      <td style={{padding:'9px 4px',fontFamily:'DM Sans',fontSize:12,color:'#6F7482'}}>{user.lang}</td>
+      <td style={{padding:'9px 4px'}}>
+        <span style={{display:'inline-block',padding:'2px 8px',borderRadius:999,
+          background:user.stage==='Churned'?'#FEECEB':user.stage==='Engaged'?'#E8F6EC':user.stage==='Activated'?'#EAF1FE':'#FFF8E6',
+          color:user.stage==='Churned'?'#B42318':user.stage==='Engaged'?'#15803D':user.stage==='Activated'?'#1E4FA8':'#6B4F11',
+          fontFamily:'DM Sans',fontSize:10.5,fontWeight:600}}>{user.stage}</span>
+      </td>
+      <td style={{padding:'9px 4px'}}><ArchetypeBadge kind={user.archetype}/></td>
+      <td style={{padding:'9px 4px',textAlign:'right',fontFamily:'Jost',fontSize:12.5,fontWeight:600,color:user.acc>=85?'#22C55E':user.acc>=75?'#F59E0B':'#F44336',fontVariantNumeric:'tabular-nums'}}>{user.acc}%</td>
+      <td style={{padding:'9px 4px',fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>{user.lastActive}</td>
+      <td style={{padding:'9px 12px',textAlign:'right'}}>
+        <button onClick={onOpen} style={{padding:'4px 8px',background:'#fff',border:'1px solid #E1E4EC',borderRadius:5,fontFamily:'DM Sans',fontSize:11,cursor:'pointer',color:'#2C2C2C',display:'inline-flex',alignItems:'center',gap:3}}>
+          View <Icon name="arrow-right" size={10} color="#6F7482"/>
         </button>
-      </td>
-      <td style={{padding:'10px 4px', fontFamily:'DM Sans',fontSize:12,color:'#2C2C2C'}}>
-        <span style={{display:'inline-flex',alignItems:'center',gap:6}}>
-          <span style={{fontSize:14}}>{user.flag}</span>{user.country}
-        </span>
-      </td>
-      <td style={{padding:'10px 4px', fontFamily:'DM Sans',fontSize:12,color:'#6F7482'}}>{user.lang}</td>
-      <td style={{padding:'10px 4px'}}>
-        <span style={{
-          display:'inline-block',padding:'2px 8px',borderRadius:999,
-          background: user.stage==='Churned'?'#FEECEB':user.stage==='Engaged'?'#E8F6EC':'#EAF1FE',
-          color:    user.stage==='Churned'?'#B42318':user.stage==='Engaged'?'#15803D':'#1E4FA8',
-          fontFamily:'DM Sans',fontSize:10.5,fontWeight:600
-        }}>{user.stage}</span>
-      </td>
-      <td style={{padding:'10px 4px'}}><ArchetypeBadge kind={user.archetype}/></td>
-      <td style={{padding:'10px 4px',textAlign:'center'}}><TierPill tier={user.volTier}/></td>
-      <td style={{padding:'10px 4px',textAlign:'right',fontFamily:'Jost',fontSize:12.5,fontWeight:500,fontVariantNumeric:'tabular-nums'}}>
-        {user.acc}%
-      </td>
-      <td style={{padding:'10px 4px',textAlign:'center'}}>
-        <span style={{display:'inline-flex',alignItems:'center',gap:6,fontFamily:'Jost',fontSize:12,fontVariantNumeric:'tabular-nums',color: user.churn>60?'#F44336':user.churn>30?'#F59E0B':'#22C55E',fontWeight:600}}>
-          {user.churn}%
-          <TrajectoryArrow t={user.trajectory}/>
-        </span>
-      </td>
-      <td style={{padding:'10px 4px', fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>{user.lastActive}</td>
-      <td style={{padding:'10px 12px', textAlign:'right'}}>
-        <button onClick={onOpen} style={{
-          padding:'5px 9px', background:'#fff', border:'1px solid #E1E4EC', borderRadius:6,
-          fontFamily:'DM Sans',fontSize:11,fontWeight:500,cursor:'pointer',color:'#2C2C2C',
-          display:'inline-flex',alignItems:'center',gap:4
-        }}>View <Icon name="arrow-right" size={10} color="#6F7482"/></button>
       </td>
     </tr>
   );
 }
-
 function UserTable({ users, onOpen, selected, setSelected }) {
   const allSelected = users.length>0 && users.every(u=>selected.has(u.id));
-  const toggleAll = () => {
-    if(allSelected) setSelected(new Set());
-    else setSelected(new Set(users.map(u=>u.id)));
-  };
   return (
     <div style={{overflow:'auto'}}>
-      <table style={{width:'100%', borderCollapse:'collapse', fontFamily:'DM Sans', minWidth:900}}>
+      <table style={{width:'100%',borderCollapse:'collapse',fontFamily:'DM Sans',minWidth:700}}>
         <thead>
           <tr style={{background:'#FAFBFD'}}>
-            <th style={{padding:'10px 12px',textAlign:'left',width:30}}>
-              <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{accentColor:'#4285F4'}}/>
-            </th>
-            {[
-              {label:'User', align:'left'},
-              {label:'Country', align:'left'},
-              {label:'Language', align:'left'},
-              {label:'Stage', align:'left'},
-              {label:'Archetype', align:'left'},
-              {label:'Vol tier', align:'center'},
-              {label:'Accuracy', align:'right'},
-              {label:'Churn risk', align:'center'},
-              {label:'Last active', align:'left'},
-              {label:'', align:'right'},
-            ].map((h,i)=>(
-              <th key={i} style={{padding:'10px 4px',textAlign:h.align,fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,color:'#6F7482',textTransform:'uppercase',letterSpacing:'.05em'}}>{h.label}</th>
+            <th style={{padding:'9px 12px',width:30}}><input type="checkbox" checked={allSelected} onChange={()=>allSelected?setSelected(new Set()):setSelected(new Set(users.map(u=>u.id)))} style={{accentColor:'#4285F4'}}/></th>
+            {['User','Country','Language','Stage','Archetype','Accuracy','Last active',''].map((h,i)=>(
+              <th key={i} style={{padding:'9px 4px',textAlign:i===6?'right':'left',fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,color:'#6F7482',textTransform:'uppercase',letterSpacing:'.05em'}}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {users.map(u => (
-            <UserRow key={u.id} user={u} onOpen={()=>onOpen(u)}
-              selected={selected.has(u.id)}
-              onToggleSelect={()=>{
-                const next = new Set(selected);
-                if(next.has(u.id)) next.delete(u.id); else next.add(u.id);
-                setSelected(next);
-              }}/>
-          ))}
+          {users.length===0
+            ? <tr><td colSpan={9} style={{padding:'40px 24px',textAlign:'center',fontFamily:'DM Sans',fontSize:13,color:'#9AA2B1'}}>No users match current filters.</td></tr>
+            : users.map(u=><UserRow key={u.id} user={u} onOpen={()=>onOpen(u)} selected={selected.has(u.id)} onToggleSelect={()=>{const n=new Set(selected);n.has(u.id)?n.delete(u.id):n.add(u.id);setSelected(n);}}/>)
+          }
         </tbody>
       </table>
     </div>
   );
 }
 
-// ─── Individual User Profile Card ─────────────────────────────
-function Sparkline({ points, color='#4285F4', width=160, height=30 }) {
-  const min = Math.min(...points), max = Math.max(...points);
-  const range = Math.max(max-min, 1);
-  const d = points.map((p,i)=>`${i===0?'M':'L'}${(i/(points.length-1))*width},${height - ((p-min)/range)*height}`).join(' ');
+// ─── AI Recommendation Panel ───────────────────────────────────
+function RecoCard({ icon, title, detail, action, actionColor, tag }) {
   return (
-    <svg width={width} height={height} style={{display:'block'}}>
-      <path d={`${d} L${width},${height} L0,${height} Z`} fill={`${color}20`}/>
-      <path d={d} fill="none" stroke={color} strokeWidth="1.6"/>
-    </svg>
-  );
-}
-
-function ProfileCard({ user, onClose }) {
-  if(!user) return null;
-  const a = ARCH_BY[user.archetype] || {};
-  const volSeries = [3,5,4,6,7,5,8,9,7,10,12,11];
-  const accSeries = [85,86,88,87,89,90,91,90,92,91,92,92].map(v=>v - (90 - user.acc));
-
-  return (
-    <aside style={{
-      width:340, flexShrink:0, background:'#fff', border:'1px solid #E9ECF3',
-      borderRadius:12, overflow:'hidden', alignSelf:'flex-start',
-      maxHeight:'calc(100vh - 200px)', display:'flex', flexDirection:'column',
-      position:'sticky', top:0
-    }}>
-      {/* Header */}
-      <div style={{padding:'14px 16px', borderBottom:'1px solid #F2F3F8', display:'flex',alignItems:'flex-start',gap:10}}>
-        <div style={{width:38,height:38,borderRadius:10,background:'#EAF1FE',display:'grid',placeItems:'center',color:'#4285F4',fontFamily:'Jost',fontWeight:600}}>
-          {user.id.slice(-3)}
+    <div style={{border:'1px solid #E9ECF3',borderRadius:10,overflow:'hidden',background:'#fff'}}>
+      <div style={{padding:'10px 12px',display:'flex',alignItems:'flex-start',gap:10}}>
+        <div style={{width:30,height:30,borderRadius:8,background:actionColor+'18',display:'grid',placeItems:'center',flexShrink:0}}>
+          <Icon name={icon} size={14} color={actionColor}/>
         </div>
         <div style={{flex:1,minWidth:0}}>
-          <div style={{fontFamily:'Jost',fontSize:14,fontWeight:600,color:'#111125'}}>{user.id}</div>
-          <div style={{fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482',marginTop:2}}>
-            {user.flag} {user.country} · {user.lang}
+          <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
+            <span style={{fontFamily:'DM Sans',fontSize:11.5,fontWeight:700,color:'#111125'}}>{title}</span>
+            {tag && <span style={{padding:'1px 6px',borderRadius:999,background:actionColor+'18',color:actionColor,fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}}>{tag}</span>}
           </div>
-          <div style={{display:'flex',gap:5,marginTop:6,flexWrap:'wrap'}}>
-            <span style={{padding:'2px 7px',borderRadius:999,background:'#EAF1FE',color:'#1E4FA8',fontFamily:'DM Sans',fontSize:10.5,fontWeight:600}}>{user.stage}</span>
-            <ArchetypeBadge kind={user.archetype}/>
-          </div>
+          <div style={{fontFamily:'DM Sans',fontSize:11,color:'#6F7482',lineHeight:1.5}}>{detail}</div>
         </div>
-        <button onClick={onClose} style={{width:26,height:26,border:0,background:'transparent',cursor:'pointer',display:'grid',placeItems:'center'}}>
-          <Icon name="x" size={14} color="#6F7482"/>
+      </div>
+      <div style={{padding:'8px 12px',borderTop:'1px solid #F2F3F8',background:'#FAFBFD'}}>
+        <button style={{
+          display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',
+          background:actionColor,color:'#fff',border:0,borderRadius:5,
+          fontFamily:'DM Sans',fontSize:11,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',
+        }}>
+          <Icon name="sparkle" size={10} color="#fff"/> {action}
         </button>
-      </div>
-
-      <div style={{overflow:'auto',flex:1,padding:16,display:'flex',flexDirection:'column',gap:16}}>
-        {/* Snapshot */}
-        <div>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>Snapshot</div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:8}}>
-            {[
-              {label:'Volume', value:user.volTier, accent:'#4285F4'},
-              {label:'Accuracy', value:user.accTier, accent:'#22C55E'},
-              {label:'Consistency', value:user.consistency, accent:'#8B5CF6'},
-            ].map(m=>(
-              <div key={m.label} style={{padding:10,background:'#F7F8FB',borderRadius:8}}>
-                <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482'}}>{m.label}</div>
-                <div style={{marginTop:4,display:'flex',alignItems:'center',gap:6}}>
-                  <TierPill tier={m.value}/>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Trends */}
-        <div>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>12-week trend</div>
-          <div style={{display:'flex',flexDirection:'column',gap:10}}>
-            <div style={{padding:10,background:'#F7F8FB',borderRadius:8}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
-                <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#2C2C2C'}}>Weekly volume</span>
-                <span style={{fontFamily:'Jost',fontSize:12,fontWeight:600,color:'#111125'}}>{volSeries[volSeries.length-1]*10} tasks/wk</span>
-              </div>
-              <Sparkline points={volSeries} color="#4285F4" width={300} height={40}/>
-            </div>
-            <div style={{padding:10,background:'#F7F8FB',borderRadius:8}}>
-              <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}}>
-                <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#2C2C2C'}}>Accuracy</span>
-                <span style={{fontFamily:'Jost',fontSize:12,fontWeight:600,color:'#111125'}}>{user.acc}%</span>
-              </div>
-              <Sparkline points={accSeries} color="#22C55E" width={300} height={40}/>
-            </div>
-          </div>
-        </div>
-
-        {/* Predictive */}
-        <div>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>Predictive</div>
-          <div style={{display:'flex',flexDirection:'column',gap:7}}>
-            <PredictiveRow label="Churn risk"
-              value={`${user.churn}%`}
-              color={user.churn>60?'#F44336':user.churn>30?'#F59E0B':'#22C55E'}
-              bar={user.churn}/>
-            <PredictiveRow label="Quality trajectory"
-              value={user.trajectory} trailing={<TrajectoryArrow t={user.trajectory}/>}
-              color={user.trajectory==='up'?'#22C55E':user.trajectory==='down'?'#F44336':'#6F7482'}/>
-            <PredictiveRow label="Next-wk availability"
-              value={user.trajectory==='down' ? '8h est.' : '22h est.'}
-              color="#4285F4" bar={user.trajectory==='down' ? 25 : 78}/>
-          </div>
-        </div>
-
-        {/* Tag History */}
-        <div>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>Tag history</div>
-          <ol style={{listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:10,position:'relative'}}>
-            <div style={{position:'absolute',left:5,top:6,bottom:6,width:1,background:'#E1E6F0'}}/>
-            {[
-              { date:'2026-02-14', tag:`Archetype: ${a.label}`,  color:a.color||'#4285F4', cur:true },
-              { date:'2025-11-02', tag:'Skill tier: L2 → L3',  color:'#4285F4' },
-              { date:'2025-08-19', tag:'Archetype: High Potential', color:'#8B5CF6' },
-              { date:'2024-03-12', tag:`Registered · ${user.country}`, color:'#94A3B8' },
-            ].map((e,i)=>(
-              <li key={i} style={{display:'grid',gridTemplateColumns:'12px 1fr auto',alignItems:'center',gap:10,position:'relative'}}>
-                <span style={{width:11,height:11,borderRadius:99,background: e.cur? e.color : '#fff', border:`2px solid ${e.color}`,marginLeft:0,zIndex:1}}/>
-                <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#2C2C2C'}}>{e.tag}</span>
-                <span style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',fontVariantNumeric:'tabular-nums'}}>{e.date}</span>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </div>
-
-      <div style={{padding:12, borderTop:'1px solid #F2F3F8', display:'flex', gap:8}}>
-        <button style={{
-          flex:1, padding:'8px 10px', background:'#4285F4', color:'#fff', border:0, borderRadius:7,
-          fontFamily:'DM Sans',fontSize:12,fontWeight:600,cursor:'pointer'
-        }}>Add to campaign</button>
-        <button style={{
-          flex:1, padding:'8px 10px', background:'#fff', color:'#2C2C2C', border:'1px solid #E1E4EC', borderRadius:7,
-          fontFamily:'DM Sans',fontSize:12,fontWeight:500,cursor:'pointer'
-        }}>Nudge</button>
-      </div>
-    </aside>
-  );
-}
-
-function PredictiveRow({ label, value, bar, color='#4285F4', trailing }) {
-  return (
-    <div style={{display:'grid',gridTemplateColumns:'1fr auto',alignItems:'center',gap:8}}>
-      <div style={{minWidth:0}}>
-        <div style={{fontFamily:'DM Sans',fontSize:11.5,color:'#2C2C2C'}}>{label}</div>
-        {bar != null && (
-          <div style={{marginTop:4,height:5,background:'#F2F3F8',borderRadius:999,overflow:'hidden'}}>
-            <div style={{width:`${bar}%`,height:'100%',background:color,borderRadius:999}}/>
-          </div>
-        )}
-      </div>
-      <div style={{display:'inline-flex',alignItems:'center',gap:5,fontFamily:'Jost',fontSize:12.5,fontWeight:600,color,fontVariantNumeric:'tabular-nums'}}>
-        {value}{trailing}
       </div>
     </div>
   );
 }
 
+function AIRecommendations({ filters, users, headcount }) {
+  if(!filters || Object.keys(filters).every(k=>!filters[k]||(Array.isArray(filters[k])&&!filters[k].length))) {
+    return (
+      <aside style={{width:280,flexShrink:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,padding:'20px 16px',alignSelf:'flex-start'}}>
+        <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125',marginBottom:4}}>AI Recommendations</div>
+        <div style={{fontFamily:'DM Sans',fontSize:12,color:'#9AA2B1',lineHeight:1.6}}>Apply a filter to see recommended actions based on your segment.</div>
+        <div style={{marginTop:16,padding:'12px',background:'#F7F8FB',borderRadius:8,display:'flex',alignItems:'center',gap:8}}>
+          <Icon name="sparkle" size={14} color="#4285F4"/>
+          <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>I'll analyse your segment and suggest campaigns, quality actions, or recruitment targets.</span>
+        </div>
+      </aside>
+    );
+  }
+
+  const recos = [];
+  const hc = parseInt(headcount) || 0;
+
+  // ── Existing users analysis ──────────────────────────────────
+  const inactive = users.filter(u => u.stage === 'Registered' || u.stage === 'Onboarded' || u.stage === 'Churned');
+  const inactiveRate = users.length > 0 ? inactive.length / users.length : 0;
+  const avgAcc = users.length > 0 ? users.reduce((s,u)=>s+u.acc,0)/users.length : 0;
+  const countries = (filters.country||[]).join(', ') || 'selected region';
+  const langs = (filters.lang||[]).join(', ') || 'selected languages';
+
+  if(inactive.length > 0 && inactiveRate >= 0.2) {
+    recos.push({
+      section:'existing',
+      icon:'users', tag:'Re-engagement',
+      actionColor:'#4285F4',
+      title: inactive.length + ' inactive users in ' + countries,
+      detail: Math.round(inactiveRate*100) + '% of matched users are Registered/Onboarded/Churned. A targeted re-engagement campaign (SMS + in-app push) could reactivate this pool.',
+      action:'Launch campaign',
+    });
+  }
+
+  if(avgAcc > 0 && avgAcc < 80) {
+    recos.push({
+      section:'existing',
+      icon:'target', tag:'Penalty',
+      actionColor:'#F44336',
+      title:'Low accuracy: avg ' + avgAcc.toFixed(1) + '%',
+      detail:'Segment average is below the 80% threshold. Apply performance penalty rules to flag underperformers and trigger corrective flows.',
+      action:'Apply penalty rules',
+    });
+  } else if(avgAcc >= 80 && avgAcc < 85) {
+    recos.push({
+      section:'existing',
+      icon:'star', tag:'Treasure Hunt',
+      actionColor:'#F59E0B',
+      title:'Accuracy borderline: avg ' + avgAcc.toFixed(1) + '%',
+      detail:'Users are near the quality threshold. Launch a Treasure Hunting programme — gamified quality tasks with bonus rewards — to push accuracy above 85%.',
+      action:'Launch Treasure Hunt',
+    });
+  }
+
+  if(users.length > 0 && inactiveRate < 0.5 && avgAcc >= 85) {
+    recos.push({
+      section:'existing',
+      icon:'trending-up', tag:'Evergreen',
+      actionColor:'#22C55E',
+      title:'High-quality active segment',
+      detail:'This segment has strong accuracy (' + avgAcc.toFixed(1) + '%) and low dormancy. Consider enrolling these users in advanced task queues or skill-upgrade tracks.',
+      action:'Enrol in advanced queue',
+    });
+  }
+
+  // ── External / Recruitment analysis ─────────────────────────
+  if(filters.lang && filters.lang.length > 0) {
+    filters.lang.forEach(lang => {
+      const pool = LANG_POOL[lang] || 0;
+      const active = users.filter(u => u.lang.includes(lang) && (u.stage==='Engaged'||u.stage==='Activated')).length;
+      const scaledPool = Math.round(pool * (users.length / Math.max(USERS.length, 1)) * 8);
+      const available = pool;
+      const gap = hc > 0 ? Math.max(0, hc - available) : (available < 100 ? Math.round(100 - available * 0.6) : 0);
+      if(gap > 0 || available < 150) {
+        recos.push({
+          section:'external',
+          icon:'user-plus', tag:'Recruit',
+          actionColor:'#8B5CF6',
+          title:'Recruit ' + lang + ' speakers' + (gap>0 ? ' — gap: ' + gap : ''),
+          detail: lang + ' pool: ~' + available + ' total users' + (hc>0?' vs '+hc+' required':'') + '. Target: native/fluent ' + lang + ' speakers, L2+ skill tier, located in ' + (countries||'any region') + '. Recommend Facebook + TikTok acquisition campaign.',
+          action:'Create acquisition brief',
+        });
+      }
+    });
+  }
+
+  if(hc > 0 && users.length < hc) {
+    const gap = hc - users.length;
+    recos.push({
+      section:'external',
+      icon:'alert-circle', tag:'Shortage',
+      actionColor:'#F44336',
+      title:'Headcount gap: need ' + gap + ' more users',
+      detail:'Current filter matches only ' + users.length + ' users vs. target of ' + hc + '. Broaden country/language scope or launch an external acquisition campaign to fill the gap.',
+      action:'Broaden segment',
+    });
+  }
+
+  const existingRecos = recos.filter(r=>r.section==='existing');
+  const externalRecos = recos.filter(r=>r.section==='external');
+
+  return (
+    <aside style={{width:280,flexShrink:0,background:'#F7F8FB',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden',alignSelf:'flex-start',display:'flex',flexDirection:'column'}}>
+      <div style={{padding:'12px 14px',borderBottom:'1px solid #E9ECF3',background:'#fff',display:'flex',alignItems:'center',gap:8}}>
+        <div style={{width:24,height:24,borderRadius:6,background:'#EAF1FE',display:'grid',placeItems:'center'}}>
+          <Icon name="sparkle" size={12} color="#4285F4"/>
+        </div>
+        <div>
+          <div style={{fontFamily:'DM Sans',fontSize:13,fontWeight:700,color:'#111125'}}>AI Recommendations</div>
+          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482'}}>{recos.length} action{recos.length!==1?'s':''} suggested</div>
+        </div>
+      </div>
+
+      <div style={{padding:'12px',display:'flex',flexDirection:'column',gap:8,overflow:'auto'}}>
+        {existingRecos.length > 0 && (
+          <>
+            <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px'}}>
+              Existing users ({users.length} matched)
+            </div>
+            {existingRecos.map((r,i)=><RecoCard key={'e'+i} {...r}/>)}
+          </>
+        )}
+        {externalRecos.length > 0 && (
+          <>
+            <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px',marginTop:4}}>
+              External recruitment
+            </div>
+            {externalRecos.map((r,i)=><RecoCard key={'x'+i} {...r}/>)}
+          </>
+        )}
+        {recos.length === 0 && (
+          <div style={{padding:'16px',textAlign:'center',fontFamily:'DM Sans',fontSize:12,color:'#9AA2B1'}}>
+            No specific actions recommended for this segment.
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
 // ─── Main Explorer Page ────────────────────────────────────────
 function UserExplorer() {
-  const [filters, setFilters] = React.useState({});
-  const [selectedUser, setSelectedUser] = React.useState(USERS[0]);
+  // draft = what user is editing; committed = what was submitted (applied to filter)
+  const [draft, setDraft] = React.useState({ country:[], lang:[], minAcc:0, headcount:'' });
+  const [committed, setCommitted] = React.useState(null);
   const [selected, setSelected] = React.useState(new Set());
+  const [selectedUser, setSelectedUser] = React.useState(null);
 
-  const filtered = USERS.filter(u => {
-    if(filters.country?.length && !filters.country.includes(u.country)) return false;
-    if(filters.stage?.length && !filters.stage.includes(u.stage)) return false;
-    if(filters.archetype?.length && !filters.archetype.includes(u.archetype)) return false;
-    if(filters.volTier?.length && !filters.volTier.includes(u.volTier)) return false;
-    if(filters.accTier?.length && !filters.accTier.includes(u.accTier)) return false;
-    if(filters.trajectory?.length && !filters.trajectory.includes(u.trajectory)) return false;
-    if(filters.minAcc && u.acc < filters.minAcc) return false;
-    if(filters.maxChurn != null && u.churn > filters.maxChurn) return false;
-    return true;
-  });
+  const applyFilter = () => {
+    setCommitted({...draft});
+    setSelected(new Set());
+  };
 
-  // pretend the full dataset is 30,600 users; scale
+  const filtered = React.useMemo(() => {
+    if(!committed) return USERS;
+    return USERS.filter(u => {
+      if(committed.country?.length && !committed.country.includes(u.country)) return false;
+      if(committed.lang?.length && !committed.lang.some(l=>u.lang.includes(l))) return false;
+      if(committed.minAcc > 0 && u.acc < committed.minAcc) return false;
+      return true;
+    });
+  }, [committed]);
+
   const approxCount = Math.round(filtered.length / USERS.length * 30600);
 
   return (
-    <div style={{padding:24, display:'flex', flexDirection:'column', gap:16}}>
+    <div style={{padding:24,display:'flex',flexDirection:'column',gap:16}}>
       <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:16}}>
         <div>
           <div style={{fontFamily:'DM Sans',fontSize:17,fontWeight:700,color:'#111125'}}>User Explorer</div>
           <div style={{fontFamily:'DM Sans',fontSize:12.5,color:'#6F7482',marginTop:2}}>
-            Segment builder & individual drill-down · {approxCount.toLocaleString()} labellers match current filters
+            Segment builder · {committed ? filtered.length + ' users match applied filters' : 'Set filters and click Apply to segment'}
           </div>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
-          <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 10px 6px 11px',background:'#fff',border:'1px solid #E1E4EC',borderRadius:7,width:240}}>
+          <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'6px 10px 6px 11px',background:'#fff',border:'1px solid #E1E4EC',borderRadius:7,width:220}}>
             <Icon name="search" size={13} color="#6F7482"/>
-            <input placeholder="Search by ID, email…" style={{border:0,outline:'none',flex:1,fontFamily:'DM Sans',fontSize:12.5,background:'transparent'}}/>
+            <input placeholder="Search by ID, email..." style={{border:0,outline:'none',flex:1,fontFamily:'DM Sans',fontSize:12.5,background:'transparent'}}/>
           </div>
-          <button style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 12px',border:0,borderRadius:7,background:'#4285F4',cursor:'pointer',fontFamily:'DM Sans',fontSize:12.5,fontWeight:600,color:'#fff'}}>
-            <Icon name="plus" size={13} color="#fff"/> Save segment
-          </button>
         </div>
       </div>
 
-      {/* Active filter summary bar */}
-      {Object.keys(filters).length > 0 && (
-        <div style={{padding:'10px 14px',background:'#F4F8FF',border:'1px solid #DBE9FF',borderRadius:8,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
+      {committed && (
+        <div style={{padding:'9px 14px',background:'#F4F8FF',border:'1px solid #DBE9FF',borderRadius:8,display:'flex',alignItems:'center',gap:10,flexWrap:'wrap'}}>
           <Icon name="filter" size={13} color="#4285F4"/>
-          <span style={{fontFamily:'DM Sans',fontSize:12,color:'#1E4FA8',fontWeight:600}}>Active segment:</span>
-          {Object.entries(filters).map(([k,v])=>{
-            const vs = Array.isArray(v) ? v : [v];
-            if(vs.length===0) return null;
-            return vs.map((val,i)=>(
-              <span key={`${k}-${i}`} style={{padding:'3px 9px',background:'#fff',border:'1px solid #DBE9FF',borderRadius:999,fontFamily:'DM Sans',fontSize:11,color:'#1E4FA8',display:'inline-flex',alignItems:'center',gap:6}}>
-                <b style={{fontWeight:600,color:'#6F7482',fontWeight:500}}>{k}:</b> {String(val)}
-                <button onClick={()=>{
-                  const next = {...filters};
-                  if(Array.isArray(next[k])) next[k] = next[k].filter(x=>x!==val);
-                  else delete next[k];
-                  if(Array.isArray(next[k]) && next[k].length===0) delete next[k];
-                  setFilters(next);
-                }} style={{background:'transparent',border:0,padding:0,cursor:'pointer',display:'inline-flex'}}>
-                  <Icon name="x" size={10} color="#1E4FA8"/>
-                </button>
-              </span>
-            ));
-          })}
-          <button onClick={()=>setFilters({})} style={{marginLeft:'auto',background:'transparent',border:0,cursor:'pointer',color:'#1E4FA8',fontFamily:'DM Sans',fontSize:11.5,fontWeight:500}}>Clear all</button>
+          <span style={{fontFamily:'DM Sans',fontSize:12,color:'#1E4FA8',fontWeight:600}}>Active filters:</span>
+          {committed.country?.length>0 && <span style={{padding:'3px 9px',background:'#fff',border:'1px solid #DBE9FF',borderRadius:999,fontFamily:'DM Sans',fontSize:11,color:'#1E4FA8'}}>Country: {committed.country.join(', ')}</span>}
+          {committed.lang?.length>0 && <span style={{padding:'3px 9px',background:'#fff',border:'1px solid #DBE9FF',borderRadius:999,fontFamily:'DM Sans',fontSize:11,color:'#1E4FA8'}}>Language: {committed.lang.join(', ')}</span>}
+          {committed.minAcc>0 && <span style={{padding:'3px 9px',background:'#fff',border:'1px solid #DBE9FF',borderRadius:999,fontFamily:'DM Sans',fontSize:11,color:'#1E4FA8'}}>Accuracy: ≥{committed.minAcc}%</span>}
+          {committed.headcount && <span style={{padding:'3px 9px',background:'#fff',border:'1px solid #DBE9FF',borderRadius:999,fontFamily:'DM Sans',fontSize:11,color:'#1E4FA8'}}>Headcount target: {committed.headcount}</span>}
+          <span style={{fontFamily:'DM Sans',fontSize:11,color:'#1E4FA8',fontWeight:600}}>{filtered.length} matched</span>
+          <button onClick={()=>{setCommitted(null);setDraft({country:[],lang:[],minAcc:0,headcount:''});}} style={{marginLeft:'auto',background:'transparent',border:0,cursor:'pointer',color:'#1E4FA8',fontFamily:'DM Sans',fontSize:11.5,fontWeight:500}}>Clear all</button>
         </div>
       )}
 
-      {/* Main layout: filters | table | profile */}
-      <div style={{display:'flex',gap:16,alignItems:'flex-start'}}>
-        <SegmentBuilder filters={filters} setFilters={setFilters} resultCount={approxCount}/>
+      <div style={{display:'flex',gap:14,alignItems:'flex-start'}}>
+        <SegmentBuilder draft={draft} setDraft={setDraft} onSubmit={applyFilter} resultCount={committed ? approxCount : Math.round(USERS.length / USERS.length * 30600)}/>
 
         <div style={{flex:1,minWidth:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden'}}>
-          <div style={{padding:'12px 16px',borderBottom:'1px solid #F2F3F8',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <div style={{padding:'11px 16px',borderBottom:'1px solid #F2F3F8',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
             <div style={{fontFamily:'DM Sans',fontSize:13,fontWeight:600,color:'#111125'}}>
-              {filtered.length} of {USERS.length} shown <span style={{fontWeight:400,color:'#6F7482'}}>· preview sample</span>
+              {filtered.length} users <span style={{fontWeight:400,color:'#6F7482'}}>· preview sample</span>
             </div>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
-              {selected.size > 0 && (
-                <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#4285F4',fontWeight:600}}>{selected.size} selected</span>
-              )}
-              <button style={{padding:'5px 10px',border:'1px solid #E1E4EC',borderRadius:6,background:'#fff',fontFamily:'DM Sans',fontSize:11.5,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:5}}>
-                <Icon name="sliders" size={12}/> Columns
-              </button>
+              {selected.size>0 && <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#4285F4',fontWeight:600}}>{selected.size} selected</span>}
               <button style={{padding:'5px 10px',border:'1px solid #E1E4EC',borderRadius:6,background:'#fff',fontFamily:'DM Sans',fontSize:11.5,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:5}}>
                 <Icon name="download" size={12}/> Export CSV
               </button>
             </div>
           </div>
           <UserTable users={filtered} onOpen={setSelectedUser} selected={selected} setSelected={setSelected}/>
-          <div style={{padding:'10px 16px',borderTop:'1px solid #F2F3F8',display:'flex',alignItems:'center',justifyContent:'space-between',fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>
-            <span>Showing 1–{filtered.length} of {approxCount.toLocaleString()}</span>
+          <div style={{padding:'9px 16px',borderTop:'1px solid #F2F3F8',display:'flex',alignItems:'center',justifyContent:'space-between',fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>
+            <span>Showing 1–{filtered.length} of ~{approxCount.toLocaleString()}</span>
             <div style={{display:'flex',gap:4}}>
-              <button style={{padding:'4px 10px',border:'1px solid #E1E4EC',borderRadius:5,background:'#fff',fontFamily:'inherit',fontSize:'inherit',color:'#6F7482',cursor:'pointer'}}>Prev</button>
-              <button style={{padding:'4px 10px',border:'1px solid #4285F4',borderRadius:5,background:'#4285F4',fontFamily:'inherit',fontSize:'inherit',color:'#fff',cursor:'pointer',fontWeight:600}}>1</button>
-              <button style={{padding:'4px 10px',border:'1px solid #E1E4EC',borderRadius:5,background:'#fff',fontFamily:'inherit',fontSize:'inherit',color:'#2C2C2C',cursor:'pointer'}}>2</button>
-              <button style={{padding:'4px 10px',border:'1px solid #E1E4EC',borderRadius:5,background:'#fff',fontFamily:'inherit',fontSize:'inherit',color:'#2C2C2C',cursor:'pointer'}}>3</button>
-              <button style={{padding:'4px 10px',border:'1px solid #E1E4EC',borderRadius:5,background:'#fff',fontFamily:'inherit',fontSize:'inherit',color:'#6F7482',cursor:'pointer'}}>Next</button>
+              {[1,2,3].map(p=><button key={p} style={{padding:'3px 9px',border:p===1?'1px solid #4285F4':'1px solid #E1E4EC',borderRadius:5,background:p===1?'#4285F4':'#fff',fontFamily:'DM Sans',fontSize:11.5,color:p===1?'#fff':'#2C2C2C',cursor:'pointer',fontWeight:p===1?600:400}}>{p}</button>)}
             </div>
           </div>
         </div>
 
-        <ProfileCard user={selectedUser} onClose={()=>setSelectedUser(null)}/>
+        <AIRecommendations filters={committed} users={filtered} headcount={committed?.headcount||''}/>
       </div>
     </div>
   );
