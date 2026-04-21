@@ -5,8 +5,6 @@ function ModuleTabs({ active, onChange }) {
     { key:'overview',  label:'Pool Health Overview' },
     { key:'explorer',  label:'User Explorer' },
     { key:'gaps',      label:'Gap Alerts',       badge:4 },
-    { key:'analytics', label:'Analytics' },
-    { key:'campaigns', label:'Campaigns' },
   ];
   return (
     <div style={{

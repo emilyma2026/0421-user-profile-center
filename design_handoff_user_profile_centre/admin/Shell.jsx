@@ -11,8 +11,6 @@ const NAV_SECTIONS = [
       { key:'overview',  label:'Pool Health',        isLeaf:true },
       { key:'explorer',  label:'User Explorer',      isLeaf:true },
       { key:'gaps',      label:'Gap Alerts',         isLeaf:true, badge:4 },
-      { key:'analytics', label:'Analytics',          isLeaf:true },
-      { key:'campaigns', label:'Campaigns',          isLeaf:true },
     ]},
   ]},
   { label:null, items:[
