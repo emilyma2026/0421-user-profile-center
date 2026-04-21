@@ -7,14 +7,6 @@
 // Gap Alerts preview (cards from §6.2.3)
 const GAPS = [
   {
-    severity:'critical', type:'Acquisition Gap',
-    title:'Spanish · LATAM · L2',
-    stat:'3 active / 50 required',
-    coverage:6, dim:'Language',
-    note:'Blocking Legal QA — Brazil launch',
-    action:'Launch targeted acquisition',
-  },
-  {
     severity:'critical', type:'Throughput Gap',
     title:'Philippines dormant pool',
     stat:'9,200 registered · 0 active 30d',
@@ -83,7 +75,7 @@ function GapAlertRow({ gap, onOpen }) {
 function GapAlertPanel({ onOpen, onViewAll }) {
   return (
     <div style={{display:'flex',flexDirection:'column',gap:10}}>
-      {GAPS.slice(0,3).map((g,i)=><GapAlertRow key={i} gap={g} onOpen={onOpen}/>)}
+      {GAPS.map((g,i)=><GapAlertRow key={i} gap={g} onOpen={onOpen}/>)}
       <button onClick={onViewAll} style={{
         marginTop:2, alignSelf:'flex-start', background:'transparent',border:0, color:'#4285F4',
         fontFamily:'Jost',fontSize:13,fontWeight:500,cursor:'pointer',padding:0,
