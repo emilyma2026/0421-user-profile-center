@@ -1,6 +1,17 @@
 // Drill-down modal opened when a user clicks a Coverage axis or a Gap alert.
 // Shows the dimension breakdown + recommended campaigns (§6.2.3).
 
+// Per-action campaign descriptions (no budget, no channels)
+const GAP_CAMPAIGN_DESC = {
+  'Re-engagement campaign':
+    'Send a targeted in-app and SMS re-engagement push to dormant labellers in this pool. Prioritise users who completed at least one task before going inactive.',
+  'Push Sensitive nudge':
+    'Deliver a personalised in-app nudge timed to peak availability windows. Target the Push Sensitive cohort — users who respond to timely prompts.',
+  'Upskilling campaign':
+    'Launch a guided upskilling programme: recommended tutorial pack, practice tasks, peer comparison, and a micro-credential on completion. Triggered by cohort accuracy drop.',
+  'Targeted acquisition campaign': null, // handled as Action Needed
+};
+
 function DrillDownModal({ open, onClose, context }) {
   if (!open) return null;
 
@@ -8,6 +19,9 @@ function DrillDownModal({ open, onClose, context }) {
   const isGap = context?.kind === 'gap';
   const title = isGap ? context.data.title : `${context.data.axis} coverage`;
   const sub   = isGap ? `${context.data.type} · ${context.data.dim}` : context.data.tooltip;
+  // Determine if this gap needs external recruitment (Action Needed) vs a campaign
+  const action = isGap ? (context.data.action || '') : '';
+  const isAcquisition = action.toLowerCase().includes('acquisition') || action.toLowerCase().includes('recruit');
 
   return (
     <div onClick={onClose} style={{
@@ -60,30 +74,68 @@ function DrillDownModal({ open, onClose, context }) {
             <AvailabilityBreakdown/>
           </div>
 
-          {/* recommended campaign */}
-          <div style={{padding:'16px 18px',border:'1px solid #DBE9FF',background:'#F4F8FF',borderRadius:12,display:'flex',gap:12,alignItems:'flex-start'}}>
-            <div style={{width:32,height:32,borderRadius:8,background:'#4285F4',display:'grid',placeItems:'center',flexShrink:0}}>
-              <Icon name="sparkle" size={16} color="#fff"/>
+          {/* recommended campaign / action needed */}
+          {isAcquisition ? (
+            /* ── Acquisition gap → Action Needed (no channels, no budget) ── */
+            <div style={{border:'1.5px solid #EDE9FE',borderRadius:12,overflow:'hidden',background:'#fff'}}>
+              <div style={{padding:'10px 16px',background:'#F5F3FF',borderBottom:'1px solid #EDE9FE',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+                <div style={{display:'flex',alignItems:'center',gap:7}}>
+                  <Icon name="alert-circle" size={13} color="#7C3AED"/>
+                  <span style={{fontFamily:'DM Sans',fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#7C3AED'}}>Action Needed</span>
+                </div>
+                <span style={{padding:'2px 8px',borderRadius:999,background:'#EDE9FE',color:'#6D28D9',fontFamily:'DM Sans',fontSize:10,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}}>Recruitment</span>
+              </div>
+              <div style={{padding:'14px 16px',display:'flex',flexDirection:'column',gap:8}}>
+                <div style={{fontFamily:'Jost',fontSize:15,fontWeight:600,color:'#111125'}}>
+                  {isGap ? context.data.title : 'Recruitment gap'}
+                </div>
+                <div style={{display:'flex',flexDirection:'column',gap:5}}>
+                  {[
+                    { label:'Dimension', value: isGap ? context.data.dim : '—' },
+                    { label:'Region',    value: isGap && context.data.dim === 'Language' ? (context.data.geo || 'Global') : (isGap ? context.data.dim : '—') },
+                    { label:'Coverage',  value: isGap ? context.data.coverage + '%' : '—' },
+                    { label:'Gap',       value: isGap ? context.data.stat : '—', accent: true },
+                  ].map(function(row, i) {
+                    return (
+                      <div key={i} style={{display:'grid',gridTemplateColumns:'90px 1fr',gap:8,alignItems:'baseline'}}>
+                        <span style={{fontFamily:'DM Sans',fontSize:10.5,color:'#9AA2B1',fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}>{row.label}</span>
+                        <span style={{fontFamily:'DM Sans',fontSize:12,fontWeight: row.accent ? 700 : 500, color: row.accent ? '#7C3AED' : '#111125'}}>{row.value}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {isGap && context.data.note && (
+                  <div style={{marginTop:4,padding:'7px 10px',background:'#F5F3FF',borderRadius:7,fontFamily:'DM Sans',fontSize:11.5,color:'#6D28D9',lineHeight:1.5}}>
+                    {context.data.note}
+                  </div>
+                )}
+              </div>
             </div>
-            <div style={{flex:1}}>
-              <div style={{fontFamily:'DM Sans',fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#3160B7'}}>AI-Recommended Campaign</div>
-              <div style={{fontFamily:'Jost',fontSize:15,fontWeight:500,color:'#111125',marginTop:2}}>
-                {isGap ? context.data.action : 'Weekend recruitment — APAC push-sensitive cohort'}
+          ) : (
+            /* ── Campaign gap → AI-Recommended Campaign (no budget, no channels) ── */
+            <div style={{padding:'16px 18px',border:'1px solid #DBE9FF',background:'#F4F8FF',borderRadius:12,display:'flex',gap:12,alignItems:'flex-start'}}>
+              <div style={{width:32,height:32,borderRadius:8,background:'#4285F4',display:'grid',placeItems:'center',flexShrink:0}}>
+                <Icon name="sparkle" size={16} color="#fff"/>
               </div>
-              <div style={{fontFamily:'DM Sans',fontSize:13,color:'#2C2C2C',marginTop:6,lineHeight:1.55}}>
-                Est. budget <b>$4,200</b> · Suggested channels: <b>Facebook Lite · TikTok SEA · Upwork SG</b>.
-                Optimal send window <b>Sat 19:00 SGT</b> — derived from Temporal Footprint of matched segment.
-              </div>
-              <div style={{display:'flex',gap:8,marginTop:12}}>
-                <button style={{padding:'8px 14px',background:'#4285F4',color:'#fff',border:0,borderRadius:8,fontFamily:'Jost',fontSize:13,fontWeight:500,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:6}}>
-                  Generate brief <Icon name="arrow-right" size={13} color="#fff"/>
-                </button>
-                <button style={{padding:'8px 14px',background:'#fff',color:'#2C2C2C',border:'1px solid #E1E1E1',borderRadius:8,fontFamily:'Jost',fontSize:13,fontWeight:500,cursor:'pointer'}}>
-                  Export segment ({isGap ? '9,200' : '1,430'})
-                </button>
+              <div style={{flex:1}}>
+                <div style={{fontFamily:'DM Sans',fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#3160B7'}}>AI-Recommended Campaign</div>
+                <div style={{fontFamily:'Jost',fontSize:15,fontWeight:500,color:'#111125',marginTop:2}}>
+                  {isGap ? action : 'Weekend availability push — APAC cohort'}
+                </div>
+                <div style={{fontFamily:'DM Sans',fontSize:13,color:'#2C2C2C',marginTop:6,lineHeight:1.55}}>
+                  {(isGap && GAP_CAMPAIGN_DESC[action]) || 'Analyse the matched segment and generate a tailored campaign brief.'}
+                </div>
+                <div style={{display:'flex',gap:8,marginTop:12}}>
+                  <button style={{padding:'8px 14px',background:'#4285F4',color:'#fff',border:0,borderRadius:8,fontFamily:'Jost',fontSize:13,fontWeight:500,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:6}}>
+                    Generate brief <Icon name="arrow-right" size={13} color="#fff"/>
+                  </button>
+                  <button style={{padding:'8px 14px',background:'#fff',color:'#2C2C2C',border:'1px solid #E1E1E1',borderRadius:8,fontFamily:'Jost',fontSize:13,fontWeight:500,cursor:'pointer'}}>
+                    Export segment ({isGap ? '9,200' : '1,430'})
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
