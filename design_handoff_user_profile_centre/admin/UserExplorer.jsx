@@ -225,7 +225,9 @@ function UserTable({ users, onOpen, selected, setSelected }) {
   );
 }
 
-// ─── AI Recommendation Panel ───────────────────────────────────
+// ─── AI Recommendation cards ──────────────────────────────────
+
+// RecoCard — used for existing-user campaigns (re-engagement, quality, etc.)
 function RecoCard({ icon, title, detail, action, actionColor, tag }) {
   return (
     <div style={{border:'1px solid #E9ECF3',borderRadius:10,overflow:'hidden',background:'#fff'}}>
@@ -254,6 +256,61 @@ function RecoCard({ icon, title, detail, action, actionColor, tag }) {
   );
 }
 
+// ActionNeededCard — used for external recruitment gaps (no channels, no budget)
+function ActionNeededCard({ lang, region, gapCount, currentCount, targetCount, note }) {
+  const rows = [
+    { label:'Language', value: lang },
+    region ? { label:'Region', value: region } : null,
+    { label:'Current pool', value: currentCount + ' labellers' },
+    targetCount > 0 ? { label:'Target', value: targetCount + ' labellers' } : null,
+    { label:'Gap', value: gapCount > 0 ? '+' + gapCount + ' needed' : 'Below threshold' },
+  ].filter(Boolean);
+
+  return (
+    <div style={{border:'1.5px solid #EDE9FE',borderRadius:10,overflow:'hidden',background:'#fff'}}>
+      <div style={{
+        padding:'7px 12px',background:'#F5F3FF',borderBottom:'1px solid #EDE9FE',
+        display:'flex',alignItems:'center',justifyContent:'space-between',
+      }}>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <Icon name="alert-circle" size={11} color="#7C3AED"/>
+          <span style={{fontFamily:'DM Sans',fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#7C3AED'}}>
+            Action Needed
+          </span>
+        </div>
+        <span style={{padding:'1px 7px',borderRadius:999,background:'#EDE9FE',color:'#6D28D9',fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}}>
+          Recruitment
+        </span>
+      </div>
+      <div style={{padding:'10px 12px',display:'flex',flexDirection:'column',gap:6}}>
+        <div style={{fontFamily:'Jost',fontSize:13.5,fontWeight:600,color:'#111125',marginBottom:2}}>
+          Recruit {gapCount > 0 ? gapCount : 'more'} {lang} labellers
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:4}}>
+          {rows.map(function(row, i) {
+            const isGap = row.label === 'Gap';
+            return (
+              <div key={i} style={{display:'grid',gridTemplateColumns:'88px 1fr',gap:6,alignItems:'baseline'}}>
+                <span style={{fontFamily:'DM Sans',fontSize:10.5,color:'#9AA2B1',fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}>
+                  {row.label}
+                </span>
+                <span style={{fontFamily:'DM Sans',fontSize:11.5,fontWeight: isGap ? 700 : 500,color: isGap ? '#7C3AED' : '#111125'}}>
+                  {row.value}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        {note && (
+          <div style={{marginTop:4,padding:'5px 8px',background:'#F5F3FF',borderRadius:6,fontFamily:'DM Sans',fontSize:10.5,color:'#6D28D9',lineHeight:1.5}}>
+            {note}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AIRecommendations({ filters, users, headcount }) {
   if(!filters || Object.keys(filters).every(k=>!filters[k]||(Array.isArray(filters[k])&&!filters[k].length))) {
     return (
@@ -262,36 +319,34 @@ function AIRecommendations({ filters, users, headcount }) {
         <div style={{fontFamily:'DM Sans',fontSize:12,color:'#9AA2B1',lineHeight:1.6}}>Apply a filter to see recommended actions based on your segment.</div>
         <div style={{marginTop:16,padding:'12px',background:'#F7F8FB',borderRadius:8,display:'flex',alignItems:'center',gap:8}}>
           <Icon name="sparkle" size={14} color="#4285F4"/>
-          <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>I'll analyse your segment and suggest campaigns, quality actions, or recruitment targets.</span>
+          <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>I will analyse your segment and suggest campaigns, quality actions, or recruitment targets.</span>
         </div>
       </aside>
     );
   }
 
-  const recos = [];
+  const existingRecos = [];
+  const externalRecos = [];
   const hc = parseInt(headcount) || 0;
 
   // ── Existing users analysis ──────────────────────────────────
   const inactive = users.filter(u => u.stage === 'Registered' || u.stage === 'Onboarded' || u.stage === 'Churned');
   const inactiveRate = users.length > 0 ? inactive.length / users.length : 0;
   const avgAcc = users.length > 0 ? users.reduce((s,u)=>s+u.acc,0)/users.length : 0;
-  const countries = (filters.country||[]).join(', ') || 'selected region';
-  const langs = (filters.lang||[]).join(', ') || 'selected languages';
+  const countries = (filters.country||[]).join(', ') || '';
 
   if(inactive.length > 0 && inactiveRate >= 0.2) {
-    recos.push({
-      section:'existing',
+    existingRecos.push({
       icon:'users', tag:'Re-engagement',
       actionColor:'#4285F4',
-      title: inactive.length + ' inactive users in ' + countries,
+      title: inactive.length + ' inactive users' + (countries ? ' in ' + countries : ''),
       detail: Math.round(inactiveRate*100) + '% of matched users are Registered/Onboarded/Churned. A targeted re-engagement campaign (SMS + in-app push) could reactivate this pool.',
       action:'Launch campaign',
     });
   }
 
   if(avgAcc > 0 && avgAcc < 80) {
-    recos.push({
-      section:'existing',
+    existingRecos.push({
       icon:'target', tag:'Penalty',
       actionColor:'#F44336',
       title:'Low accuracy: avg ' + avgAcc.toFixed(1) + '%',
@@ -299,8 +354,7 @@ function AIRecommendations({ filters, users, headcount }) {
       action:'Apply penalty rules',
     });
   } else if(avgAcc >= 80 && avgAcc < 85) {
-    recos.push({
-      section:'existing',
+    existingRecos.push({
       icon:'star', tag:'Treasure Hunt',
       actionColor:'#F59E0B',
       title:'Accuracy borderline: avg ' + avgAcc.toFixed(1) + '%',
@@ -310,8 +364,7 @@ function AIRecommendations({ filters, users, headcount }) {
   }
 
   if(users.length > 0 && inactiveRate < 0.5 && avgAcc >= 85) {
-    recos.push({
-      section:'existing',
+    existingRecos.push({
       icon:'trending-up', tag:'Evergreen',
       actionColor:'#22C55E',
       title:'High-quality active segment',
@@ -320,41 +373,42 @@ function AIRecommendations({ filters, users, headcount }) {
     });
   }
 
-  // ── External / Recruitment analysis ─────────────────────────
+  // ── External / Recruitment gaps ──────────────────────────────
+  // Language-based gap: show Action Needed card per language
   if(filters.lang && filters.lang.length > 0) {
-    filters.lang.forEach(lang => {
+    filters.lang.forEach(function(lang) {
       const pool = LANG_POOL[lang] || 0;
-      const active = users.filter(u => u.lang.includes(lang) && (u.stage==='Engaged'||u.stage==='Activated')).length;
-      const scaledPool = Math.round(pool * (users.length / Math.max(USERS.length, 1)) * 8);
-      const available = pool;
-      const gap = hc > 0 ? Math.max(0, hc - available) : (available < 100 ? Math.round(100 - available * 0.6) : 0);
-      if(gap > 0 || available < 150) {
-        recos.push({
-          section:'external',
-          icon:'user-plus', tag:'Recruit',
-          actionColor:'#8B5CF6',
-          title:'Recruit ' + lang + ' speakers' + (gap>0 ? ' — gap: ' + gap : ''),
-          detail: lang + ' pool: ~' + available + ' total users' + (hc>0?' vs '+hc+' required':'') + '. Target: native/fluent ' + lang + ' speakers, L2+ skill tier, located in ' + (countries||'any region') + '. Recommend Facebook + TikTok acquisition campaign.',
-          action:'Create acquisition brief',
+      const gap = hc > 0 ? Math.max(0, hc - pool) : (pool < 100 ? Math.round(100 - pool * 0.6) : 0);
+      if(gap > 0 || pool < 150) {
+        externalRecos.push({
+          type:'action-needed',
+          lang: lang,
+          region: countries || null,
+          gapCount: gap > 0 ? gap : Math.max(0, 150 - pool),
+          currentCount: pool,
+          targetCount: hc > 0 ? hc : 150,
+          note: pool < 100 ? lang + ' pool is below minimum viable size for task allocation.' : null,
         });
       }
     });
   }
 
+  // Headcount gap across entire segment
   if(hc > 0 && users.length < hc) {
     const gap = hc - users.length;
-    recos.push({
-      section:'external',
-      icon:'alert-circle', tag:'Shortage',
-      actionColor:'#F44336',
-      title:'Headcount gap: need ' + gap + ' more users',
-      detail:'Current filter matches only ' + users.length + ' users vs. target of ' + hc + '. Broaden country/language scope or launch an external acquisition campaign to fill the gap.',
-      action:'Broaden segment',
+    const langLabel = (filters.lang && filters.lang.length > 0) ? filters.lang.join(', ') : 'any language';
+    externalRecos.push({
+      type:'action-needed',
+      lang: langLabel,
+      region: countries || null,
+      gapCount: gap,
+      currentCount: users.length,
+      targetCount: hc,
+      note: 'Segment matches only ' + users.length + ' of ' + hc + ' required. Broaden country or language scope to fill this gap.',
     });
   }
 
-  const existingRecos = recos.filter(r=>r.section==='existing');
-  const externalRecos = recos.filter(r=>r.section==='external');
+  const totalActions = existingRecos.length + externalRecos.length;
 
   return (
     <aside style={{width:280,flexShrink:0,background:'#F7F8FB',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden',alignSelf:'flex-start',display:'flex',flexDirection:'column'}}>
@@ -364,7 +418,7 @@ function AIRecommendations({ filters, users, headcount }) {
         </div>
         <div>
           <div style={{fontFamily:'DM Sans',fontSize:13,fontWeight:700,color:'#111125'}}>AI Recommendations</div>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482'}}>{recos.length} action{recos.length!==1?'s':''} suggested</div>
+          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482'}}>{totalActions} action{totalActions!==1?'s':''} suggested</div>
         </div>
       </div>
 
@@ -374,18 +428,18 @@ function AIRecommendations({ filters, users, headcount }) {
             <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px'}}>
               Existing users ({users.length} matched)
             </div>
-            {existingRecos.map((r,i)=><RecoCard key={'e'+i} {...r}/>)}
+            {existingRecos.map(function(r,i){ return React.createElement(RecoCard, Object.assign({key:'e'+i}, r)); })}
           </>
         )}
         {externalRecos.length > 0 && (
           <>
-            <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px',marginTop:4}}>
-              External recruitment
+            <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px',marginTop:existingRecos.length>0?4:0}}>
+              Recruitment gaps
             </div>
-            {externalRecos.map((r,i)=><RecoCard key={'x'+i} {...r}/>)}
+            {externalRecos.map(function(r,i){ return React.createElement(ActionNeededCard, Object.assign({key:'x'+i}, r)); })}
           </>
         )}
-        {recos.length === 0 && (
+        {totalActions === 0 && (
           <div style={{padding:'16px',textAlign:'center',fontFamily:'DM Sans',fontSize:12,color:'#9AA2B1'}}>
             No specific actions recommended for this segment.
           </div>
