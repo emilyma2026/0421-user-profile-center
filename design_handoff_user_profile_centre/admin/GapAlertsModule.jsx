@@ -14,7 +14,7 @@ const ALL_GAPS = [
     recipe:'reengagement',
   },
   {
-    id:'gap-apac-weekend', severity:'warning', type:'Throughput Gap', dim:'Availability', geo:'APAC',
+    id:'gap-apac-weekend', severity:'warning', type:'Throughput Gap', dim:'Engagement', geo:'APAC',
     title:'Weekend availability · APAC',
     required:100, available:34, pct:34,
     note:'Under-supply during Sat 18:00 SGT window',
@@ -44,7 +44,7 @@ const ALL_GAPS = [
     recipe:'acquisition',
   },
   {
-    id:'gap-vi-l3', severity:'warning', type:'Throughput Gap', dim:'Skill', geo:'Vietnam',
+    id:'gap-vi-l3', severity:'warning', type:'Throughput Gap', dim:'Quality', geo:'Vietnam',
     title:'Vietnamese L3 ramp',
     required:30, available:22, pct:73,
     note:'L2→L3 promotion velocity has slowed',
@@ -52,16 +52,6 @@ const ALL_GAPS = [
     score:52,
     action:'Upskilling campaign',
     recipe:'upskill',
-  },
-  {
-    id:'gap-id-push', severity:'healthy', type:'Throughput Gap', dim:'Availability', geo:'Indonesia',
-    title:'Indonesia weekday afternoon',
-    required:60, available:58, pct:97,
-    note:'Within tolerance · monitor only',
-    projects:['ID OCR'],
-    score:18,
-    action:'Monitor',
-    recipe:'monitor',
   },
 ];
 
@@ -216,7 +206,6 @@ function CampaignBriefMini({ recipe }) {
 function GapsSummary({ gaps }) {
   const crit = gaps.filter(g=>g.severity==='critical').length;
   const warn = gaps.filter(g=>g.severity==='warning').length;
-  const heal = gaps.filter(g=>g.severity==='healthy').length;
   const dimCounts = {};
   gaps.forEach(g=>{ dimCounts[g.dim]=(dimCounts[g.dim]||0)+1; });
   const topDim = Object.entries(dimCounts).sort((a,b)=>b[1]-a[1])[0]?.[0];
@@ -235,7 +224,6 @@ function GapsSummary({ gaps }) {
     <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
       {pill('Critical gaps', crit, '#F44336')}
       {pill('Warning gaps', warn, '#F59E0B')}
-      {pill('Within tolerance', heal, '#22C55E')}
       <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#fff',border:'1px solid #E9ECF3',borderRadius:10,flex:1}}>
         <div style={{width:28,height:28,borderRadius:6,background:'#EAF1FE',display:'grid',placeItems:'center'}}>
           <Icon name="target" size={14} color="#4285F4"/>
@@ -267,9 +255,8 @@ function GapAlertsModule() {
     {k:'all',label:'All severities'},
     {k:'critical',label:'Critical',color:'#F44336'},
     {k:'warning',label:'Warning',color:'#F59E0B'},
-    {k:'healthy',label:'Healthy',color:'#22C55E'},
   ];
-  const dimOpts = ['all','Language','Geography','Availability','Skill','Engagement'];
+  const dimOpts = ['all','Language','Geography','Engagement','Quality'];
 
   return (
     <div style={{padding:24,display:'flex',flexDirection:'column',gap:16}}>

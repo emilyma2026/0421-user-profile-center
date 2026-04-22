@@ -19,7 +19,7 @@ const GAPS = [
     severity:'warning', type:'Throughput Gap',
     title:'Weekend availability (APAC)',
     stat:'34% of ideal window',
-    coverage:34, dim:'Availability',
+    coverage:34, dim:'Engagement',
     note:'Under-supply during Sat 18:00 SGT window',
     action:'Push Sensitive nudge',
     projects:['Live Moderation', 'Content Review APAC'],
