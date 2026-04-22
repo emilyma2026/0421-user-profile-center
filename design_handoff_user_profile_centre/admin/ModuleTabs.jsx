@@ -4,7 +4,7 @@ function ModuleTabs({ active, onChange }) {
   const tabs = [
     { key:'overview',  label:'Pool Health Overview' },
     { key:'explorer',  label:'User Explorer' },
-    { key:'gaps',      label:'Gap Alerts',       badge:4 },
+    { key:'gaps',      label:'Alerts',           badge:4 },
   ];
   return (
     <div style={{

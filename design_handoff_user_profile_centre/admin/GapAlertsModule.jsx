@@ -302,9 +302,9 @@ function GapAlertsModule() {
     <div style={{padding:24,display:'flex',flexDirection:'column',gap:16}}>
       <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:16}}>
         <div>
-          <div style={{fontFamily:'DM Sans',fontSize:17,fontWeight:700,color:'#111125'}}>Gap Alerts</div>
+          <div style={{fontFamily:'DM Sans',fontSize:17,fontWeight:700,color:'#111125'}}>Alerts</div>
           <div style={{fontFamily:'DM Sans',fontSize:12.5,color:'#6F7482',marginTop:2}}>
-            Supply–demand mismatches ranked by severity · auto-linked to campaign briefs (§6.2.3)
+            Pool trend monitoring · alerts triggered on detected drops · linked to campaign briefs
           </div>
         </div>
         <div style={{display:'flex',gap:8}}>

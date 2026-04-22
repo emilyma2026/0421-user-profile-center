@@ -10,7 +10,7 @@ const NAV_SECTIONS = [
     { key:'userprofile', label:'User Profile Centre', icon:'users', expanded:true, children:[
       { key:'overview',  label:'Pool Health',        isLeaf:true },
       { key:'explorer',  label:'User Explorer',      isLeaf:true },
-      { key:'gaps',      label:'Gap Alerts',         isLeaf:true, badge:4 },
+      { key:'gaps',      label:'Alerts',              isLeaf:true, badge:4 },
     ]},
   ]},
   { label:null, items:[
