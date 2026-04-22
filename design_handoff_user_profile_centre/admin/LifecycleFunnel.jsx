@@ -151,7 +151,7 @@ function LifecycleDonut() {
 
 function LifecycleModule({ onNavigate }) {
   return (
-    <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:24,alignItems:'start'}}>
+    <div style={{display:'grid',gridTemplateColumns:'3fr 2fr',gap:24,alignItems:'start'}}>
       {/* Left: lifecycle stages column chart */}
       <div>
         <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
@@ -162,7 +162,7 @@ function LifecycleModule({ onNavigate }) {
       </div>
 
       {/* Right: stage distribution donut */}
-      <div style={{borderLeft:'1px solid #F2F3F8',paddingLeft:24,minWidth:260}}>
+      <div style={{borderLeft:'1px solid #F2F3F8',paddingLeft:24}}>
         <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',marginBottom:12}}>Stage distribution</div>
         <LifecycleDonut/>
       </div>
