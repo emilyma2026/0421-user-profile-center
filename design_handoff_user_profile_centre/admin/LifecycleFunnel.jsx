@@ -167,48 +167,13 @@ function LifecycleModule({ onNavigate }) {
         </div>
       </div>
 
-      {/* Bottom row — full-width activation micro-funnel + zombie callout */}
-      <div style={{paddingTop:14,borderTop:'1px solid #F2F3F8',display:'grid',gridTemplateColumns:'1.6fr 1fr',gap:20,alignItems:'stretch'}}>
-        <div style={{display:'flex',flexDirection:'column'}}>
-          <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:12,gap:10}}>
-            <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',whiteSpace:'nowrap'}}>Activation micro-funnel</div>
-            <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',whiteSpace:'nowrap'}}>Registration → Repeat task · 30d</div>
-          </div>
-          <MicroFunnel/>
+      {/* Bottom row — activation micro-funnel */}
+      <div style={{paddingTop:14,borderTop:'1px solid #F2F3F8'}}>
+        <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:12,gap:10}}>
+          <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',whiteSpace:'nowrap'}}>Activation micro-funnel</div>
+          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',whiteSpace:'nowrap'}}>Registration → Repeat task · 30d</div>
         </div>
-
-        <div style={{
-          padding:'12px 14px', display:'grid',
-          gridTemplateColumns:'auto 1fr', gridTemplateRows:'auto auto', columnGap:12, rowGap:10,
-          alignItems:'center',
-          background:'#F4F8FF', border:'1px solid #DBE9FF', borderRadius:10
-        }}>
-          <div style={{width:32,height:32,borderRadius:7,background:'#fff',border:'1px solid #DBE9FF',display:'grid',placeItems:'center'}}>
-            <Icon name="alert" size={15} color="#4285F4"/>
-          </div>
-          <div>
-            <div style={{fontFamily:'DM Sans',fontSize:12.5,fontWeight:600,color:'#111125'}}>
-              9,200 zombie users
-            </div>
-            <div style={{fontFamily:'DM Sans',fontSize:11,color:'#6F7482',marginTop:1}}>
-              Registered never-activated · 74% PH · avg 47d
-            </div>
-          </div>
-          <div style={{gridColumn:'1 / -1',display:'flex',gap:8}}>
-            <button onClick={()=>onNavigate && onNavigate('campaigns')} style={{
-              flex:1,padding:'7px 10px',background:'#4285F4',color:'#fff',border:0,borderRadius:6,
-              fontFamily:'DM Sans',fontSize:11.5,fontWeight:600,cursor:'pointer'
-            }}>
-              Recall campaign →
-            </button>
-            <button onClick={()=>onNavigate && onNavigate('analytics')} style={{
-              padding:'7px 10px',background:'#fff',color:'#4285F4',border:'1px solid #DBE9FF',borderRadius:6,
-              fontFamily:'DM Sans',fontSize:11.5,fontWeight:500,cursor:'pointer'
-            }}>
-              Analyse
-            </button>
-          </div>
-        </div>
+        <MicroFunnel/>
       </div>
     </div>
   );
