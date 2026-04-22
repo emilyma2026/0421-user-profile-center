@@ -12,6 +12,7 @@ const ALL_GAPS = [
     score:88,
     action:'Re-engagement campaign',
     recipe:'reengagement',
+    recAction:'Engagement rate in Philippines has dropped to 0% — 9,200 registered labellers have had no task activity in the past 30 days (12pp drop over 7d). Consider releasing a re-engagement campaign to reactivate the dormant pool.',
   },
   {
     id:'gap-apac-weekend', severity:'warning', type:'Throughput Gap', dim:'Engagement', geo:'APAC',
@@ -22,6 +23,7 @@ const ALL_GAPS = [
     score:72,
     action:'Push Sensitive nudge',
     recipe:'nudge',
+    recAction:'Engagement rate in APAC has dropped 8pp over the past 7d (42% → 34% of ideal Sat 18:00 SGT window). Consider releasing a re-engagement campaign to reactivate the dormant pool.',
   },
   {
     id:'gap-cohort-quality', severity:'warning', type:'Throughput Gap', dim:'Engagement', geo:'Global',
@@ -32,6 +34,7 @@ const ALL_GAPS = [
     score:66,
     action:'Upskilling campaign',
     recipe:'upskill',
+    recAction:'Average accuracy in Cohort 2025-12 has declined 4.1pp over the past 7d (83% → 79%). Consider an upskilling or corrective campaign for the affected cohort.',
   },
   {
     id:'gap-ar-night', severity:'warning', type:'Acquisition Gap', dim:'Language', geo:'MENA',
@@ -42,6 +45,7 @@ const ALL_GAPS = [
     score:61,
     action:'Targeted acquisition campaign',
     recipe:'acquisition',
+    recAction:'Arabic L3 speaker pool in MENA is at 45% of required headcount (18 of 40 needed, 00:00–06:00 AST window). Consider targeted recruitment to fill this language gap.',
   },
   {
     id:'gap-vi-l3', severity:'warning', type:'Throughput Gap', dim:'Quality', geo:'Vietnam',
@@ -52,6 +56,7 @@ const ALL_GAPS = [
     score:52,
     action:'Upskilling campaign',
     recipe:'upskill',
+    recAction:'Average accuracy progression in Vietnam L3 cohort has declined — L2→L3 promotion velocity has slowed over the past 7d (73% of target). Consider an upskilling or corrective campaign for the affected cohort.',
   },
 ];
 
@@ -154,6 +159,19 @@ function GapCard({ gap, expanded, onToggle, onLaunch }) {
                 ))}
               </div>
             </div>
+
+            {/* Recommended action */}
+            {gap.recAction && (
+              <div style={{padding:'12px 14px',background:'#F4F8FF',border:'1px solid #DBE9FF',borderRadius:10,display:'flex',gap:10,alignItems:'flex-start'}}>
+                <div style={{width:28,height:28,borderRadius:7,background:'#4285F4',display:'grid',placeItems:'center',flexShrink:0,marginTop:1}}>
+                  <Icon name="sparkle" size={13} color="#fff"/>
+                </div>
+                <div>
+                  <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.07em',textTransform:'uppercase',color:'#3160B7',marginBottom:4}}>Recommended action</div>
+                  <div style={{fontFamily:'DM Sans',fontSize:12.5,color:'#2C2C2C',lineHeight:1.6}}>{gap.recAction}</div>
+                </div>
+              </div>
+            )}
 
           </div>
         </div>

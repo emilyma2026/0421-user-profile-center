@@ -125,7 +125,7 @@ function DrillDownModal({ open, onClose, context }) {
               </div>
             </div>
           ) : (
-            /* ── Campaign gap → AI-Recommended Campaign (no budget, no channels) ── */
+            /* ── Campaign gap → Recommended Campaign ── */
             <div style={{padding:'16px 18px',border:'1px solid #DBE9FF',background:'#F4F8FF',borderRadius:12,display:'flex',gap:12,alignItems:'flex-start'}}>
               <div style={{width:32,height:32,borderRadius:8,background:'#4285F4',display:'grid',placeItems:'center',flexShrink:0}}>
                 <Icon name="sparkle" size={16} color="#fff"/>

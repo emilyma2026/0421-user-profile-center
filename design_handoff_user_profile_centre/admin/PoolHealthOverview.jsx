@@ -72,7 +72,7 @@ function PoolHealthOverview({ onOpenDrill, range, setRange, onNavigate }) {
 
       {/* 1. Gap Alerts — full-width banner */}
       <SectionCard
-        title="Gap Alerts"
+        title="Alerts"
         subtitle="Ranked by severity × impact — auto-generated from gap scoring logic"
         right={
           <span style={{
