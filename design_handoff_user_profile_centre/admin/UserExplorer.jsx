@@ -190,7 +190,6 @@ function UserRow({ user, onOpen, selected, onToggleSelect }) {
           color:user.stage==='Churned'?'#B42318':user.stage==='Engaged'?'#15803D':user.stage==='Activated'?'#1E4FA8':'#6B4F11',
           fontFamily:'DM Sans',fontSize:10.5,fontWeight:600}}>{user.stage}</span>
       </td>
-      <td style={{padding:'9px 4px'}}><ArchetypeBadge kind={user.archetype}/></td>
       <td style={{padding:'9px 4px',textAlign:'right',fontFamily:'Jost',fontSize:12.5,fontWeight:600,color:user.acc>=85?'#22C55E':user.acc>=75?'#F59E0B':'#F44336',fontVariantNumeric:'tabular-nums'}}>{user.acc}%</td>
       <td style={{padding:'9px 4px',fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>{user.lastActive}</td>
       <td style={{padding:'9px 12px',textAlign:'right'}}>
@@ -209,14 +208,14 @@ function UserTable({ users, onOpen, selected, setSelected }) {
         <thead>
           <tr style={{background:'#FAFBFD'}}>
             <th style={{padding:'9px 12px',width:30}}><input type="checkbox" checked={allSelected} onChange={()=>allSelected?setSelected(new Set()):setSelected(new Set(users.map(u=>u.id)))} style={{accentColor:'#4285F4'}}/></th>
-            {['User','Country','Language','Stage','Archetype','Accuracy','Last active',''].map((h,i)=>(
-              <th key={i} style={{padding:'9px 4px',textAlign:i===6?'right':'left',fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,color:'#6F7482',textTransform:'uppercase',letterSpacing:'.05em'}}>{h}</th>
+            {['User','Country','Language','Stage','Accuracy','Last active',''].map((h,i)=>(
+              <th key={i} style={{padding:'9px 4px',textAlign:i===5?'right':'left',fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,color:'#6F7482',textTransform:'uppercase',letterSpacing:'.05em'}}>{h}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {users.length===0
-            ? <tr><td colSpan={9} style={{padding:'40px 24px',textAlign:'center',fontFamily:'DM Sans',fontSize:13,color:'#9AA2B1'}}>No users match current filters.</td></tr>
+            ? <tr><td colSpan={8} style={{padding:'40px 24px',textAlign:'center',fontFamily:'DM Sans',fontSize:13,color:'#9AA2B1'}}>No users match current filters.</td></tr>
             : users.map(u=><UserRow key={u.id} user={u} onOpen={()=>onOpen(u)} selected={selected.has(u.id)} onToggleSelect={()=>{const n=new Set(selected);n.has(u.id)?n.delete(u.id):n.add(u.id);setSelected(n);}}/>)
           }
         </tbody>
