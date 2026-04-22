@@ -121,8 +121,8 @@ function LifecycleDonut() {
     return `M${outer[0]},${outer[1]} A${R},${R} 0 ${large} 1 ${outer[2]},${outer[3]} L${inner[0]},${inner[1]} A${r2},${r2} 0 ${large} 0 ${inner[2]},${inner[3]} Z`;
   };
   return (
-    <div style={{display:'flex',alignItems:'center',gap:24}}>
-      <svg width={size} height={size} style={{flexShrink:0}}>
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
+      <svg width={size} height={size}>
         {DIST.map((d,i)=>{
           const start = acc/total;
           acc += d.count;
@@ -132,7 +132,7 @@ function LifecycleDonut() {
         <text x={cx} y={cy-2} textAnchor="middle" fontFamily="Jost" fontSize="22" fontWeight="500" fill="#111125">{(total/1000).toFixed(1)}k</text>
         <text x={cx} y={cy+14} textAnchor="middle" fontFamily="DM Sans" fontSize="11" fill="#6F7482">in pool</text>
       </svg>
-      <div style={{display:'flex',flexDirection:'column',gap:6,flex:1,minWidth:0}}>
+      <div style={{display:'flex',flexDirection:'column',gap:5,width:'100%'}}>
         {DIST.map(d=>{
           const pct = (d.count/total*100).toFixed(0);
           return (
@@ -151,8 +151,8 @@ function LifecycleDonut() {
 
 function LifecycleModule({ onNavigate }) {
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:18}}>
-      {/* Top: lifecycle stages as column chart */}
+    <div style={{display:'grid',gridTemplateColumns:'1fr auto',gap:24,alignItems:'start'}}>
+      {/* Left: lifecycle stages column chart */}
       <div>
         <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <span>Lifecycle stages</span>
@@ -161,8 +161,8 @@ function LifecycleModule({ onNavigate }) {
         <FunnelBars/>
       </div>
 
-      {/* Bottom: stage distribution donut */}
-      <div style={{borderTop:'1px solid #F2F3F8',paddingTop:16}}>
+      {/* Right: stage distribution donut */}
+      <div style={{borderLeft:'1px solid #F2F3F8',paddingLeft:24,minWidth:260}}>
         <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',marginBottom:12}}>Stage distribution</div>
         <LifecycleDonut/>
       </div>
