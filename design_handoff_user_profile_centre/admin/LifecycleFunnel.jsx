@@ -23,34 +23,35 @@ const MICRO_FUNNEL = [
 
 function FunnelBars() {
   const max = FUNNEL[0].count;
+  const BAR_H = 80;
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:8}}>
-      {FUNNEL.map((s, i)=>{
-        const w = (s.count / max) * 100;
-        const prevCount = i>0 ? FUNNEL[i-1].count : null;
-        const stepRate = prevCount ? (s.count/prevCount*100) : null;
-        const isChurn = s.stage === 'Churned';
+    <div style={{display:'grid',gridTemplateColumns:`repeat(${FUNNEL.length}, 1fr)`,gap:8,alignItems:'end'}}>
+      {FUNNEL.map((s,i)=>{
+        const h = Math.max((s.count/max)*BAR_H, 6);
+        const prev = i>0 ? FUNNEL[i-1].count : null;
+        const rate = prev ? Math.round(s.count/prev*100) : 100;
+        const isChurn = s.stage==='Churned';
+        const isWeak = rate < 85;
         return (
-          <div key={s.stage} style={{display:'grid',gridTemplateColumns:'90px 1fr 74px',alignItems:'center',gap:10}}>
-            <div style={{display:'flex',flexDirection:'column'}}>
-              <div style={{fontFamily:'DM Sans',fontSize:12.5,fontWeight:500,color:'#2C2C2C'}}>{s.stage}</div>
-              {stepRate && (
-                <div style={{fontFamily:'DM Sans',fontSize:10.5,color: isChurn?'#F44336':'#6F7482'}}>
-                  {isChurn ? 'churn rate' : `→ ${stepRate.toFixed(0)}%`}
-                </div>
-              )}
+          <div key={s.stage} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3,minWidth:0}}>
+            <div style={{fontFamily:'Jost',fontSize:11,fontWeight:600,color:'#111125',fontVariantNumeric:'tabular-nums',lineHeight:1}}>
+              {(s.count/1000).toFixed(1)}k
             </div>
-            <div style={{position:'relative',height:20,borderRadius:6,background:'#F2F3F8',overflow:'hidden'}}>
+            <div style={{width:'100%',height:BAR_H,display:'flex',alignItems:'flex-end'}}>
               <div style={{
-                position:'absolute',inset:0,width:`${w}%`,
+                width:'100%',height:h,
                 background: isChurn
-                  ? 'linear-gradient(90deg,#F44336,#F59E0B)'
-                  : `linear-gradient(90deg, #4285F4, #7CA9FC)`,
-                borderRadius:6, transition:'width .6s cubic-bezier(.2,0,0,1)'
+                  ? 'linear-gradient(180deg,#F44336,#F9A8A8)'
+                  : 'linear-gradient(180deg,#4285F4,#9DC6FF)',
+                borderRadius:'3px 3px 0 0',
               }}/>
             </div>
-            <div style={{textAlign:'right',fontFamily:'Jost',fontSize:13,fontWeight:500,color:'#111125',fontVariantNumeric:'tabular-nums'}}>
-              {s.count.toLocaleString()}
+            <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#2C2C2C',textAlign:'center',lineHeight:1.2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',width:'100%'}}>
+              {s.stage}
+            </div>
+            <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:600,lineHeight:1,
+              color: i===0?'transparent': isChurn?'#F44336': isWeak?'#F59E0B':'#22C55E'}}>
+              {i===0 ? '—' : `${rate}%`}
             </div>
           </div>
         );
@@ -120,8 +121,8 @@ function LifecycleDonut() {
     return `M${outer[0]},${outer[1]} A${R},${R} 0 ${large} 1 ${outer[2]},${outer[3]} L${inner[0]},${inner[1]} A${r2},${r2} 0 ${large} 0 ${inner[2]},${inner[3]} Z`;
   };
   return (
-    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
-      <svg width={size} height={size}>
+    <div style={{display:'flex',alignItems:'center',gap:24}}>
+      <svg width={size} height={size} style={{flexShrink:0}}>
         {DIST.map((d,i)=>{
           const start = acc/total;
           acc += d.count;
@@ -131,12 +132,12 @@ function LifecycleDonut() {
         <text x={cx} y={cy-2} textAnchor="middle" fontFamily="Jost" fontSize="22" fontWeight="500" fill="#111125">{(total/1000).toFixed(1)}k</text>
         <text x={cx} y={cy+14} textAnchor="middle" fontFamily="DM Sans" fontSize="11" fill="#6F7482">in pool</text>
       </svg>
-      <div style={{display:'flex',flexDirection:'column',gap:5,width:'100%'}}>
+      <div style={{display:'flex',flexDirection:'column',gap:6,flex:1,minWidth:0}}>
         {DIST.map(d=>{
           const pct = (d.count/total*100).toFixed(0);
           return (
             <div key={d.stage} style={{display:'grid',gridTemplateColumns:'8px 1fr auto auto',alignItems:'center',gap:8}}>
-              <span style={{width:8,height:8,borderRadius:2,background:d.color}}/>
+              <span style={{width:8,height:8,borderRadius:2,background:d.color,flexShrink:0}}/>
               <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#2C2C2C',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{d.stage}</span>
               <span style={{fontFamily:'DM Sans',fontSize:11,color:'#6F7482',fontVariantNumeric:'tabular-nums'}}>{d.count.toLocaleString()}</span>
               <span style={{fontFamily:'Jost',fontSize:11.5,fontWeight:600,color:'#111125',fontVariantNumeric:'tabular-nums',width:30,textAlign:'right'}}>{pct}%</span>
@@ -150,30 +151,20 @@ function LifecycleDonut() {
 
 function LifecycleModule({ onNavigate }) {
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:16}}>
-      {/* Top row: funnel bars | distribution donut — equal-height columns */}
-      <div style={{display:'grid', gridTemplateColumns:'1.25fr 1fr', gap:24, alignItems:'stretch'}}>
-        <div style={{display:'flex',flexDirection:'column'}}>
-          <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',marginBottom:10,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <span>Lifecycle stages</span>
-            <span style={{color:'#6F7482',fontWeight:500,fontSize:11}}>Registered → Churned</span>
-          </div>
-          <FunnelBars/>
+    <div style={{display:'flex',flexDirection:'column',gap:18}}>
+      {/* Top: lifecycle stages as column chart */}
+      <div>
+        <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',marginBottom:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+          <span>Lifecycle stages</span>
+          <span style={{color:'#6F7482',fontWeight:500,fontSize:11}}>Registered → Churned</span>
         </div>
-
-        <div style={{borderLeft:'1px solid #F2F3F8', paddingLeft:24, display:'flex', flexDirection:'column', gap:10}}>
-          <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125'}}>Stage distribution</div>
-          <LifecycleDonut/>
-        </div>
+        <FunnelBars/>
       </div>
 
-      {/* Bottom row — activation micro-funnel */}
-      <div style={{paddingTop:14,borderTop:'1px solid #F2F3F8'}}>
-        <div style={{display:'flex',alignItems:'baseline',justifyContent:'space-between',marginBottom:12,gap:10}}>
-          <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',whiteSpace:'nowrap'}}>Activation micro-funnel</div>
-          <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',whiteSpace:'nowrap'}}>Registration → Repeat task · 30d</div>
-        </div>
-        <MicroFunnel/>
+      {/* Bottom: stage distribution donut */}
+      <div style={{borderTop:'1px solid #F2F3F8',paddingTop:16}}>
+        <div style={{fontFamily:'DM Sans',fontSize:12,fontWeight:600,color:'#111125',marginBottom:12}}>Stage distribution</div>
+        <LifecycleDonut/>
       </div>
     </div>
   );
