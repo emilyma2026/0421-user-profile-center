@@ -108,7 +108,7 @@ function SegmentBuilder({ draft, setDraft, onSubmit, resultCount }) {
   const reset = () => setDraft({ country:[], lang:[], minAcc:0, headcount:'' });
   return (
     <aside style={{
-      width:240, flexShrink:0, background:'#fff', border:'1px solid #E9ECF3',
+      width:210, flexShrink:0, background:'#fff', border:'1px solid #E9ECF3',
       borderRadius:12, display:'flex', flexDirection:'column', overflow:'visible',
       alignSelf:'flex-start',
     }}>
@@ -202,14 +202,27 @@ function UserRow({ user, onOpen, selected, onToggleSelect }) {
 }
 function UserTable({ users, onOpen, selected, setSelected }) {
   const allSelected = users.length>0 && users.every(u=>selected.has(u.id));
+  const COLS = [
+    { label:'User',        width: 92,  align:'left'  },
+    { label:'Country',     width: 118, align:'left'  },
+    { label:'Language',    width: 155, align:'left'  },
+    { label:'Stage',       width: 100, align:'left'  },
+    { label:'Accuracy',    width: 74,  align:'right' },
+    { label:'Last active', width: 88,  align:'left'  },
+    { label:'',            width: 60,  align:'right' },
+  ];
   return (
     <div style={{overflow:'auto'}}>
-      <table style={{width:'100%',borderCollapse:'collapse',fontFamily:'DM Sans',minWidth:700}}>
+      <table style={{width:'100%',borderCollapse:'collapse',fontFamily:'DM Sans',tableLayout:'fixed'}}>
+        <colgroup>
+          <col style={{width:36}}/>
+          {COLS.map((c,i)=><col key={i} style={{width:c.width}}/>)}
+        </colgroup>
         <thead>
           <tr style={{background:'#FAFBFD'}}>
-            <th style={{padding:'9px 12px',width:30}}><input type="checkbox" checked={allSelected} onChange={()=>allSelected?setSelected(new Set()):setSelected(new Set(users.map(u=>u.id)))} style={{accentColor:'#4285F4'}}/></th>
-            {['User','Country','Language','Stage','Accuracy','Last active',''].map((h,i)=>(
-              <th key={i} style={{padding:'9px 4px',textAlign:i===5?'right':'left',fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,color:'#6F7482',textTransform:'uppercase',letterSpacing:'.05em'}}>{h}</th>
+            <th style={{padding:'9px 12px',width:36}}><input type="checkbox" checked={allSelected} onChange={()=>allSelected?setSelected(new Set()):setSelected(new Set(users.map(u=>u.id)))} style={{accentColor:'#4285F4'}}/></th>
+            {COLS.map((c,i)=>(
+              <th key={i} style={{padding:'9px 4px',textAlign:c.align,fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,color:'#6F7482',textTransform:'uppercase',letterSpacing:'.05em',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{c.label}</th>
             ))}
           </tr>
         </thead>
@@ -313,7 +326,7 @@ function ActionNeededCard({ lang, region, gapCount, currentCount, targetCount, n
 function AIRecommendations({ filters, users, headcount }) {
   if(!filters || Object.keys(filters).every(k=>!filters[k]||(Array.isArray(filters[k])&&!filters[k].length))) {
     return (
-      <aside style={{width:280,flexShrink:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,padding:'20px 16px',alignSelf:'flex-start'}}>
+      <aside style={{width:248,flexShrink:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,padding:'20px 16px',alignSelf:'flex-start'}}>
         <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125',marginBottom:4}}>AI Recommendations</div>
         <div style={{fontFamily:'DM Sans',fontSize:12,color:'#9AA2B1',lineHeight:1.6}}>Apply a filter to see recommended actions based on your segment.</div>
         <div style={{marginTop:16,padding:'12px',background:'#F7F8FB',borderRadius:8,display:'flex',alignItems:'center',gap:8}}>
@@ -410,7 +423,7 @@ function AIRecommendations({ filters, users, headcount }) {
   const totalActions = existingRecos.length + externalRecos.length;
 
   return (
-    <aside style={{width:280,flexShrink:0,background:'#F7F8FB',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden',alignSelf:'flex-start',display:'flex',flexDirection:'column'}}>
+    <aside style={{width:248,flexShrink:0,background:'#F7F8FB',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden',alignSelf:'flex-start',display:'flex',flexDirection:'column'}}>
       <div style={{padding:'12px 14px',borderBottom:'1px solid #E9ECF3',background:'#fff',display:'flex',alignItems:'center',gap:8}}>
         <div style={{width:24,height:24,borderRadius:6,background:'#EAF1FE',display:'grid',placeItems:'center'}}>
           <Icon name="sparkle" size={12} color="#4285F4"/>
@@ -474,7 +487,7 @@ function UserExplorer() {
   const approxCount = Math.round(filtered.length / USERS.length * 30600);
 
   return (
-    <div style={{padding:24,display:'flex',flexDirection:'column',gap:16}}>
+    <div style={{padding:20,display:'flex',flexDirection:'column',gap:14}}>
       <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:16}}>
         <div>
           <div style={{fontFamily:'DM Sans',fontSize:17,fontWeight:700,color:'#111125'}}>User Explorer</div>
@@ -503,7 +516,7 @@ function UserExplorer() {
         </div>
       )}
 
-      <div style={{display:'flex',gap:14,alignItems:'flex-start'}}>
+      <div style={{display:'flex',gap:10,alignItems:'flex-start'}}>
         <SegmentBuilder draft={draft} setDraft={setDraft} onSubmit={applyFilter} resultCount={committed ? approxCount : Math.round(USERS.length / USERS.length * 30600)}/>
 
         <div style={{flex:1,minWidth:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden'}}>
