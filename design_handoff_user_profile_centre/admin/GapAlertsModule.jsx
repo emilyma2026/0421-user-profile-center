@@ -155,16 +155,6 @@ function GapCard({ gap, expanded, onToggle, onLaunch }) {
               </div>
             </div>
 
-            {/* Launch action */}
-            <div>
-              <button onClick={(e)=>{e.stopPropagation(); onLaunch && onLaunch(gap);}} style={{
-                padding:'8px 14px',background:'#4285F4',color:'#fff',border:0,borderRadius:7,
-                fontFamily:'DM Sans',fontSize:12,fontWeight:600,cursor:'pointer',
-                display:'inline-flex',alignItems:'center',gap:6
-              }}>
-                <Icon name="sparkle" size={13} color="#fff"/> Launch {gap.action}
-              </button>
-            </div>
           </div>
         </div>
       )}

@@ -131,7 +131,7 @@ function DrillDownModal({ open, onClose, context }) {
                 <Icon name="sparkle" size={16} color="#fff"/>
               </div>
               <div style={{flex:1}}>
-                <div style={{fontFamily:'DM Sans',fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#3160B7'}}>AI-Recommended Campaign</div>
+                <div style={{fontFamily:'DM Sans',fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#3160B7'}}>Recommended Campaign</div>
                 <div style={{fontFamily:'Jost',fontSize:15,fontWeight:500,color:'#111125',marginTop:2}}>
                   {isGap ? action : 'Weekend availability push — APAC cohort'}
                 </div>
