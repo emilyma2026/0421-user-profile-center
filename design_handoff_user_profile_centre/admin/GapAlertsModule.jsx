@@ -242,14 +242,11 @@ function GapAlertsModule() {
   const [expanded, setExpanded] = React.useState('gap-ph-dormant');
   const [sev, setSev] = React.useState('all');
   const [dim, setDim] = React.useState('all');
-  const [sort, setSort] = React.useState('score');
 
-  let visible = ALL_GAPS.filter(g =>
-    (sev==='all'   || g.severity===sev) &&
-    (dim==='all'   || g.dim===dim)
-  );
-  if(sort==='score') visible = [...visible].sort((a,b)=>b.score-a.score);
-  if(sort==='coverage') visible = [...visible].sort((a,b)=>a.pct-b.pct);
+  const visible = [...ALL_GAPS.filter(g =>
+    (sev==='all' || g.severity===sev) &&
+    (dim==='all' || g.dim===dim)
+  )].sort((a,b)=>b.score-a.score);
 
   const sevOpts = [
     {k:'all',label:'All severities'},
@@ -266,20 +263,6 @@ function GapAlertsModule() {
           <div style={{fontFamily:'DM Sans',fontSize:12.5,color:'#6F7482',marginTop:2}}>
             Pool trend monitoring · alerts triggered on detected drops · linked to campaign briefs
           </div>
-        </div>
-        <div style={{display:'flex',gap:8}}>
-          <button style={{
-            padding:'7px 12px',border:'1px solid #E1E4EC',background:'#fff',borderRadius:7,
-            fontFamily:'DM Sans',fontSize:12.5,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:6
-          }}>
-            <Icon name="refresh" size={13} color="#6F7482"/> Recompute scores
-          </button>
-          <button style={{
-            padding:'7px 12px',border:0,background:'#4285F4',color:'#fff',borderRadius:7,
-            fontFamily:'DM Sans',fontSize:12.5,fontWeight:600,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:6
-          }}>
-            <Icon name="download" size={13} color="#fff"/> Export report
-          </button>
         </div>
       </div>
 
@@ -313,16 +296,6 @@ function GapAlertsModule() {
             fontFamily:'DM Sans',fontSize:12,color:'#2C2C2C',cursor:'pointer'
           }}>
             {dimOpts.map(d=><option key={d} value={d}>{d==='all'?'All dimensions':d}</option>)}
-          </select>
-        </div>
-        <div style={{marginLeft:'auto',display:'flex',alignItems:'center',gap:6}}>
-          <span style={{fontFamily:'DM Sans',fontSize:11,fontWeight:600,color:'#6F7482',textTransform:'uppercase',letterSpacing:'.05em'}}>Sort by</span>
-          <select value={sort} onChange={e=>setSort(e.target.value)} style={{
-            padding:'5px 10px',borderRadius:6,border:'1px solid #E1E4EC',background:'#fff',
-            fontFamily:'DM Sans',fontSize:12,color:'#2C2C2C',cursor:'pointer'
-          }}>
-            <option value="score">Gap score (high → low)</option>
-            <option value="coverage">Coverage (low → high)</option>
           </select>
         </div>
       </div>
