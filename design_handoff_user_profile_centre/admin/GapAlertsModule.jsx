@@ -145,62 +145,35 @@ function GapCard({ gap, expanded, onToggle, onLaunch }) {
 
       {expanded && (
         <div style={{padding:'0 16px 16px 24px',borderTop:`1px solid ${s.ring}30`,background:`${s.bg}40`}}>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20,marginTop:14}}>
-            {/* Scoring transparency */}
-            <div>
-              <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>
-                How we score this gap
-              </div>
-              <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                <_ScoreRow label="Required (Ideal Profile Matrix)" value={gap.required.toLocaleString()}/>
-                <_ScoreRow label="Available (Active pool)"        value={gap.available.toLocaleString()}/>
-                <_ScoreRow label="Coverage"                       value={`${gap.pct}%`} accent={s.score}/>
-                <_ScoreRow label="Severity weight"                value={gap.severity==='critical'?'1.5×':gap.severity==='warning'?'1.0×':'0.5×'}/>
-                <_ScoreRow label="Gap score"                      value={gap.score} bold accent={s.score}/>
-              </div>
-              <div style={{fontFamily:'DM Sans',fontSize:11,color:'#6F7482',marginTop:10,lineHeight:1.5}}>
-                Score = (Required − Available) / Required × Severity weight. Normalised to 0–100.
-              </div>
-            </div>
-
-            {/* Affected projects + recommended brief */}
+          <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:12}}>
+            {/* Affected projects */}
             <div>
               <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>
                 Affected projects
               </div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:14}}>
+              <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
                 {gap.projects.map(p=>(
-                  <span key={p} style={{
-                    padding:'4px 10px',borderRadius:999,background:'#fff',border:'1px solid #E1E4EC',
-                    fontFamily:'DM Sans',fontSize:11,color:'#2C2C2C'
-                  }}>{p}</span>
+                  <button key={p} onClick={(e)=>e.stopPropagation()} style={{
+                    padding:'4px 12px',borderRadius:999,background:'#fff',border:'1px solid #E1E4EC',
+                    fontFamily:'DM Sans',fontSize:11.5,color:'#2C2C2C',cursor:'pointer',
+                    transition:'background .15s,border-color .15s',
+                  }}
+                    onMouseEnter={e=>{e.currentTarget.style.background='#F4F8FF';e.currentTarget.style.borderColor='#4285F4';e.currentTarget.style.color='#1E4FA8';}}
+                    onMouseLeave={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.borderColor='#E1E4EC';e.currentTarget.style.color='#2C2C2C';}}
+                  >{p}</button>
                 ))}
               </div>
-              <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>
-                Auto-generated brief
-              </div>
-              <CampaignBriefMini recipe={CAMPAIGN_RECIPES[gap.recipe]} />
-              <div style={{display:'flex',gap:8,marginTop:12}}>
-                <button onClick={(e)=>{e.stopPropagation(); onLaunch && onLaunch(gap);}} style={{
-                  padding:'8px 14px',background:'#4285F4',color:'#fff',border:0,borderRadius:7,
-                  fontFamily:'DM Sans',fontSize:12,fontWeight:600,cursor:'pointer',
-                  display:'inline-flex',alignItems:'center',gap:6
-                }}>
-                  <Icon name="sparkle" size={13} color="#fff"/> Launch {gap.action}
-                </button>
-                <button onClick={(e)=>e.stopPropagation()} style={{
-                  padding:'8px 14px',background:'#fff',color:'#2C2C2C',border:'1px solid #E1E4EC',borderRadius:7,
-                  fontFamily:'DM Sans',fontSize:12,fontWeight:500,cursor:'pointer'
-                }}>
-                  Edit brief
-                </button>
-                <button onClick={(e)=>e.stopPropagation()} style={{
-                  padding:'8px 10px',background:'#fff',color:'#6F7482',border:'1px solid #E1E4EC',borderRadius:7,
-                  fontFamily:'DM Sans',fontSize:12,fontWeight:500,cursor:'pointer'
-                }}>
-                  Snooze
-                </button>
-              </div>
+            </div>
+
+            {/* Launch action */}
+            <div>
+              <button onClick={(e)=>{e.stopPropagation(); onLaunch && onLaunch(gap);}} style={{
+                padding:'8px 14px',background:'#4285F4',color:'#fff',border:0,borderRadius:7,
+                fontFamily:'DM Sans',fontSize:12,fontWeight:600,cursor:'pointer',
+                display:'inline-flex',alignItems:'center',gap:6
+              }}>
+                <Icon name="sparkle" size={13} color="#fff"/> Launch {gap.action}
+              </button>
             </div>
           </div>
         </div>

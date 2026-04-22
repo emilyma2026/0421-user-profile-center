@@ -192,11 +192,6 @@ function UserRow({ user, onOpen, selected, onToggleSelect }) {
       </td>
       <td style={{padding:'9px 4px',textAlign:'right',fontFamily:'Jost',fontSize:12.5,fontWeight:600,color:user.acc>=85?'#22C55E':user.acc>=75?'#F59E0B':'#F44336',fontVariantNumeric:'tabular-nums'}}>{user.acc}%</td>
       <td style={{padding:'9px 4px',fontFamily:'DM Sans',fontSize:11.5,color:'#6F7482'}}>{user.lastActive}</td>
-      <td style={{padding:'9px 12px',textAlign:'right'}}>
-        <button onClick={onOpen} style={{padding:'4px 8px',background:'#fff',border:'1px solid #E1E4EC',borderRadius:5,fontFamily:'DM Sans',fontSize:11,cursor:'pointer',color:'#2C2C2C',display:'inline-flex',alignItems:'center',gap:3}}>
-          View <Icon name="arrow-right" size={10} color="#6F7482"/>
-        </button>
-      </td>
     </tr>
   );
 }
@@ -209,7 +204,6 @@ function UserTable({ users, onOpen, selected, setSelected }) {
     { label:'Stage',       width: 100, align:'left'  },
     { label:'Accuracy',    width: 74,  align:'right' },
     { label:'Last active', width: 88,  align:'left'  },
-    { label:'',            width: 60,  align:'right' },
   ];
   return (
     <div style={{overflow:'auto'}}>
@@ -228,7 +222,7 @@ function UserTable({ users, onOpen, selected, setSelected }) {
         </thead>
         <tbody>
           {users.length===0
-            ? <tr><td colSpan={8} style={{padding:'40px 24px',textAlign:'center',fontFamily:'DM Sans',fontSize:13,color:'#9AA2B1'}}>No users match current filters.</td></tr>
+            ? <tr><td colSpan={7} style={{padding:'40px 24px',textAlign:'center',fontFamily:'DM Sans',fontSize:13,color:'#9AA2B1'}}>No users match current filters.</td></tr>
             : users.map(u=><UserRow key={u.id} user={u} onOpen={()=>onOpen(u)} selected={selected.has(u.id)} onToggleSelect={()=>{const n=new Set(selected);n.has(u.id)?n.delete(u.id):n.add(u.id);setSelected(n);}}/>)
           }
         </tbody>
@@ -327,7 +321,7 @@ function AIRecommendations({ filters, users, headcount }) {
   if(!filters || Object.keys(filters).every(k=>!filters[k]||(Array.isArray(filters[k])&&!filters[k].length))) {
     return (
       <aside style={{width:248,flexShrink:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,padding:'20px 16px',alignSelf:'flex-start'}}>
-        <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125',marginBottom:4}}>AI Recommendations</div>
+        <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125',marginBottom:4}}>Recommendation</div>
         <div style={{fontFamily:'DM Sans',fontSize:12,color:'#9AA2B1',lineHeight:1.6}}>Apply a filter to see recommended actions based on your segment.</div>
         <div style={{marginTop:16,padding:'12px',background:'#F7F8FB',borderRadius:8,display:'flex',alignItems:'center',gap:8}}>
           <Icon name="sparkle" size={14} color="#4285F4"/>
@@ -375,16 +369,6 @@ function AIRecommendations({ filters, users, headcount }) {
     });
   }
 
-  if(users.length > 0 && inactiveRate < 0.5 && avgAcc >= 85) {
-    existingRecos.push({
-      icon:'trending-up', tag:'Evergreen',
-      actionColor:'#22C55E',
-      title:'High-quality active segment',
-      detail:'This segment has strong accuracy (' + avgAcc.toFixed(1) + '%) and low dormancy. Consider enrolling these users in advanced task queues or skill-upgrade tracks.',
-      action:'Enrol in advanced queue',
-    });
-  }
-
   // ── External / Recruitment gaps ──────────────────────────────
   // Language-based gap: show Action Needed card per language
   if(filters.lang && filters.lang.length > 0) {
@@ -429,7 +413,7 @@ function AIRecommendations({ filters, users, headcount }) {
           <Icon name="sparkle" size={12} color="#4285F4"/>
         </div>
         <div>
-          <div style={{fontFamily:'DM Sans',fontSize:13,fontWeight:700,color:'#111125'}}>AI Recommendations</div>
+          <div style={{fontFamily:'DM Sans',fontSize:13,fontWeight:700,color:'#111125'}}>Recommendation</div>
           <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482'}}>{totalActions} action{totalActions!==1?'s':''} suggested</div>
         </div>
       </div>

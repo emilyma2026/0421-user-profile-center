@@ -47,17 +47,15 @@ function DrillDownModal({ open, onClose, context }) {
 
         <div style={{padding:'20px 24px', display:'flex',flexDirection:'column',gap:20, overflow:'auto'}}>
           {/* summary */}
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:12}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(2, 1fr)',gap:12}}>
             {(isGap
               ? [
-                  { k:'Coverage',  v: `${context.data.coverage}%`, d:'vs ideal' },
                   { k:'Severity',  v: context.data.severity, d:'gap classification' },
-                  { k:'Affected',  v: '2 projects', d:'Legal QA, Medical NER' },
+                  { k:'Affected',  v: (context.data.projects?.length || 0) + ' project' + (context.data.projects?.length !== 1 ? 's' : ''), d:'see below' },
                 ]
               : [
                   { k:'Coverage',  v: `${context.data.actual}%`, d:'actual / ideal' },
                   { k:'Gap score', v: context.data.actual < 50 ? 'High' : context.data.actual < 80 ? 'Medium' : 'Low', d:'severity-weighted' },
-                  { k:'Trend 30d', v: '−2.4pp', d:'deterioration' },
                 ]
             ).map((m,i)=>(
               <div key={i} style={{padding:'12px 14px', background:'#F8F9FC', borderRadius:10}}>
@@ -68,11 +66,26 @@ function DrillDownModal({ open, onClose, context }) {
             ))}
           </div>
 
-          {/* breakdown */}
-          <div>
-            <div style={{fontFamily:'Jost',fontSize:14,fontWeight:500,color:'#111125',marginBottom:10}}>Breakdown</div>
-            <AvailabilityBreakdown/>
-          </div>
+          {/* affected projects chips */}
+          {isGap && context.data.projects?.length > 0 && (
+            <div>
+              <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>Affected projects</div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+                {context.data.projects.map(function(p) {
+                  return (
+                    <button key={p} style={{
+                      padding:'5px 12px',borderRadius:999,background:'#fff',border:'1px solid #E1E4EC',
+                      fontFamily:'DM Sans',fontSize:12,color:'#111125',cursor:'pointer',
+                      transition:'background .15s,border-color .15s',
+                    }}
+                      onMouseEnter={e=>{e.currentTarget.style.background='#F4F8FF';e.currentTarget.style.borderColor='#4285F4';e.currentTarget.style.color='#1E4FA8';}}
+                      onMouseLeave={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.borderColor='#E1E4EC';e.currentTarget.style.color='#111125';}}
+                    >{p}</button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* recommended campaign / action needed */}
           {isAcquisition ? (
@@ -124,14 +137,6 @@ function DrillDownModal({ open, onClose, context }) {
                 </div>
                 <div style={{fontFamily:'DM Sans',fontSize:13,color:'#2C2C2C',marginTop:6,lineHeight:1.55}}>
                   {(isGap && GAP_CAMPAIGN_DESC[action]) || 'Analyse the matched segment and generate a tailored campaign brief.'}
-                </div>
-                <div style={{display:'flex',gap:8,marginTop:12}}>
-                  <button style={{padding:'8px 14px',background:'#4285F4',color:'#fff',border:0,borderRadius:8,fontFamily:'Jost',fontSize:13,fontWeight:500,cursor:'pointer',display:'inline-flex',alignItems:'center',gap:6}}>
-                    Generate brief <Icon name="arrow-right" size={13} color="#fff"/>
-                  </button>
-                  <button style={{padding:'8px 14px',background:'#fff',color:'#2C2C2C',border:'1px solid #E1E1E1',borderRadius:8,fontFamily:'Jost',fontSize:13,fontWeight:500,cursor:'pointer'}}>
-                    Export segment ({isGap ? '9,200' : '1,430'})
-                  </button>
                 </div>
               </div>
             </div>

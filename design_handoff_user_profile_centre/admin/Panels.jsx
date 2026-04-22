@@ -13,6 +13,7 @@ const GAPS = [
     coverage:0, dim:'Geography',
     note:'High-intent recall opportunity',
     action:'Re-engagement campaign',
+    projects:['Tagalog Speech', 'OCR Forms PH'],
   },
   {
     severity:'warning', type:'Throughput Gap',
@@ -21,6 +22,7 @@ const GAPS = [
     coverage:34, dim:'Availability',
     note:'Under-supply during Sat 18:00 SGT window',
     action:'Push Sensitive nudge',
+    projects:['Live Moderation', 'Content Review APAC'],
   },
   {
     severity:'warning', type:'Throughput Gap',
@@ -29,6 +31,7 @@ const GAPS = [
     coverage:79, dim:'Engagement',
     note:'Quality drift in Medical NER pack v3',
     action:'Upskilling campaign',
+    projects:['Medical NER v3'],
   },
 ];
 function severityStyles(s){
