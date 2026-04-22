@@ -99,15 +99,20 @@ function MicroFunnel() {
   );
 }
 
-// Distribution donut (merged from Panels.jsx, kept in blue family)
-const DIST = [
-  { stage:'Active Engaged',  count:3800, color:'#4285F4' },
-  { stage:'Activated-idle',  count:1300, color:'#7CA9FC' },
-  { stage:'Onboarded-pend.', count:3100, color:'#9DC6FF' },
-  { stage:'Registered-new',  count:2300, color:'#CFE0FE' },
-  { stage:'Churned 90d+',    count:1900, color:'#F44336' },
-];
+// Distribution donut — derived from FUNNEL so both charts share one dataset.
+// Each slice = users currently at that stage (deltas, not cumulative).
+function _buildDist() {
+  const colors = ['#3160B7','#4285F4','#7CA9FC','#CFE0FE','#F44336'];
+  return [
+    { stage:'Engaged',        count: FUNNEL[3].count,                             color: colors[0] },
+    { stage:'Activated',      count: FUNNEL[2].count - FUNNEL[3].count,           color: colors[1] },
+    { stage:'Onboarded',      count: FUNNEL[1].count - FUNNEL[2].count,           color: colors[2] },
+    { stage:'Registered',     count: FUNNEL[0].count - FUNNEL[1].count - FUNNEL[4].count, color: colors[3] },
+    { stage:'Churned',        count: FUNNEL[4].count,                             color: colors[4] },
+  ];
+}
 function LifecycleDonut() {
+  const DIST = _buildDist();
   const total = DIST.reduce((s,d)=>s+d.count,0);
   const size = 150, R=60, cx=size/2, cy=size/2;
   let acc = 0;

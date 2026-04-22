@@ -1,19 +1,19 @@
-// Activation by Region — fills the space under Coverage Radar.
+// Activation by Region — Registered vs Engaged (task labelling behaviour).
 // Backed by spec's 8 canonical countries (§1 Context).
 
 const REGIONS = [
-  { country:'Philippines', flag:'🇵🇭', registered:8400, activated:2100, avgDaily:3.4, accuracy:89,  status:'critical',
-    note:'9.2k dormant — highest acquisition gap' },
-  { country:'Indonesia',   flag:'🇮🇩', registered:5200, activated:2500, avgDaily:3.1, accuracy:82,  status:'warning',
-    note:'Push-sensitive cohort · optimize send time' },
-  { country:'Vietnam',     flag:'🇻🇳', registered:4100, activated:2800, avgDaily:3.6, accuracy:85,  status:'healthy',
-    note:'Best cost-per-activation' },
-  { country:'Thailand',    flag:'🇹🇭', registered:3800, activated:2400, avgDaily:2.9, accuracy:83,  status:'healthy' },
-  { country:'Egypt',       flag:'🇪🇬', registered:3200, activated:1200, avgDaily:2.4, accuracy:78,  status:'warning',
-    note:'Exam pass rate below benchmark' },
-  { country:'Mexico',      flag:'🇲🇽', registered:2400, activated:1100, avgDaily:3.2, accuracy:81,  status:'warning' },
-  { country:'Malaysia',    flag:'🇲🇾', registered:1600, activated:1200, avgDaily:3.5, accuracy:86,  status:'healthy' },
-  { country:'Singapore',   flag:'🇸🇬', registered: 900, activated: 700, avgDaily:2.8, accuracy:88,  status:'healthy' },
+  { country:'Philippines', flag:'🇵🇭', registered:8400, engaged:1200, avgDaily:3.4, accuracy:89,  status:'critical',
+    note:'9.2k dormant — highest engagement gap' },
+  { country:'Indonesia',   flag:'🇮🇩', registered:5200, engaged:1800, avgDaily:3.1, accuracy:82,  status:'warning',
+    note:'Push-sensitive cohort · optimise send time' },
+  { country:'Vietnam',     flag:'🇻🇳', registered:4100, engaged:2200, avgDaily:3.6, accuracy:85,  status:'healthy',
+    note:'Best cost-per-engagement' },
+  { country:'Thailand',    flag:'🇹🇭', registered:3800, engaged:1700, avgDaily:2.9, accuracy:83,  status:'healthy' },
+  { country:'Egypt',       flag:'🇪🇬', registered:3200, engaged: 800, avgDaily:2.4, accuracy:78,  status:'warning',
+    note:'Task participation rate below benchmark' },
+  { country:'Mexico',      flag:'🇲🇽', registered:2400, engaged: 700, avgDaily:3.2, accuracy:81,  status:'warning' },
+  { country:'Malaysia',    flag:'🇲🇾', registered:1600, engaged: 950, avgDaily:3.5, accuracy:86,  status:'healthy' },
+  { country:'Singapore',   flag:'🇸🇬', registered: 900, engaged: 620, avgDaily:2.8, accuracy:88,  status:'healthy' },
 ];
 
 function statusToColor(s) {
@@ -24,7 +24,7 @@ function RegionActivation() {
   const maxReg = Math.max(...REGIONS.map(r=>r.registered));
   const [sortBy, setSortBy] = React.useState('volume'); // volume | rate
   const sorted = [...REGIONS].sort((a,b)=>{
-    if (sortBy === 'rate') return (a.activated/a.registered) - (b.activated/b.registered);
+    if (sortBy === 'rate') return (a.engaged/a.registered) - (b.engaged/b.registered);
     return b.registered - a.registered;
   });
 
@@ -45,13 +45,13 @@ function RegionActivation() {
           letterSpacing:'inherit', textTransform:'inherit',
           display:'inline-flex', alignItems:'center', gap:4
         }}>Country {sortBy==='volume' && '↓'}</button>
-        <span>Activation split</span>
+        <span>Engagement split</span>
         <button onClick={()=>setSortBy('rate')} style={{
           background:'transparent',border:0,padding:0,cursor:'pointer',textAlign:'right',
           fontFamily:'inherit',fontSize:'inherit',fontWeight:'inherit',
           color: sortBy==='rate' ? '#4285F4' : 'inherit',
           letterSpacing:'inherit', textTransform:'inherit',
-        }}>Act. rate {sortBy==='rate' && '↓'}</button>
+        }}>Eng. rate {sortBy==='rate' && '↓'}</button>
         <span style={{textAlign:'right'}}>Avg hrs</span>
         <span style={{textAlign:'right'}}>Accuracy</span>
         <span/>
@@ -59,9 +59,9 @@ function RegionActivation() {
 
       {/* Rows */}
       {sorted.map(r => {
-        const rate = r.activated/r.registered*100;
-        const activatedW = r.activated/maxReg*100;
-        const dormantW  = (r.registered-r.activated)/maxReg*100;
+        const rate = r.engaged/r.registered*100;
+        const engagedW = r.engaged/maxReg*100;
+        const dormantW  = (r.registered-r.engaged)/maxReg*100;
         const dotColor = statusToColor(r.status);
         return (
           <div key={r.country} style={{
@@ -80,10 +80,10 @@ function RegionActivation() {
               <span style={{width:6,height:6,borderRadius:99,background:dotColor,flexShrink:0,marginLeft:'auto'}}/>
             </div>
 
-            {/* stacked bar: activated (solid) + dormant (hatched/light) */}
+            {/* stacked bar: engaged (solid) + dormant (hatched/light) */}
             <div title={r.note} style={{position:'relative',height:16,borderRadius:4,background:'#F7F8FB',overflow:'hidden',display:'flex'}}>
               <div style={{
-                width:`${activatedW}%`,background:'#4285F4',height:'100%'
+                width:`${engagedW}%`,background:'#4285F4',height:'100%'
               }}/>
               <div style={{
                 width:`${dormantW}%`,
@@ -96,7 +96,7 @@ function RegionActivation() {
               <span style={{
                 display:'inline-flex', alignItems:'baseline', gap:4,
                 fontFamily:'Jost',fontSize:13,fontWeight:600,
-                color: rate >= 60 ? '#22C55E' : rate >= 40 ? '#F59E0B' : '#F44336',
+                color: rate >= 50 ? '#22C55E' : rate >= 30 ? '#F59E0B' : '#F44336',
                 fontVariantNumeric:'tabular-nums'
               }}>
                 {rate.toFixed(0)}%
@@ -124,10 +124,10 @@ function RegionActivation() {
       {/* Legend */}
       <div style={{display:'flex',alignItems:'center',gap:16,marginTop:10,paddingTop:10,borderTop:'1px solid #F2F3F8',fontFamily:'DM Sans',fontSize:11,color:'#6F7482'}}>
         <span style={{display:'inline-flex',alignItems:'center',gap:6}}>
-          <span style={{width:10,height:10,background:'#4285F4',borderRadius:2}}/> Activated
+          <span style={{width:10,height:10,background:'#4285F4',borderRadius:2}}/> Engaged (has completed tasks)
         </span>
         <span style={{display:'inline-flex',alignItems:'center',gap:6}}>
-          <span style={{width:10,height:10,background:'repeating-linear-gradient(135deg, #CFD6E4 0 3px, #E1E6F0 3px 6px)',borderRadius:2}}/> Dormant
+          <span style={{width:10,height:10,background:'repeating-linear-gradient(135deg, #CFD6E4 0 3px, #E1E6F0 3px 6px)',borderRadius:2}}/> Registered · not yet engaged
         </span>
         <span style={{marginLeft:'auto',color:'#6F7482'}}>
           Start.AI coverage · 8 countries · 30,600 labellers tracked

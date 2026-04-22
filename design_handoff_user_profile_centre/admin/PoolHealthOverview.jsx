@@ -107,7 +107,7 @@ function PoolHealthOverview({ onOpenDrill, range, setRange, onNavigate }) {
       {/* 4. Activation by Region — full width */}
       <SectionCard
         title="Activation by Region"
-        subtitle="Registered vs activated across Start.AI's 8 coverage countries"
+        subtitle="Registered vs engaged (task labelling behaviour) across Start.AI's 8 coverage countries"
         right={
           <button onClick={()=>onNavigate && onNavigate('explorer')} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'6px 10px',border:'1px solid #E1E1E1',borderRadius:7,background:'#fff',cursor:'pointer',fontFamily:'DM Sans',fontSize:12,fontWeight:500,color:'#2C2C2C'}}>
             View all regions <Icon name="arrow-right" size={11} color="#6F7482"/>
