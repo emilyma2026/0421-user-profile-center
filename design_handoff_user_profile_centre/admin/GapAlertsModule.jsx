@@ -176,10 +176,6 @@ function CampaignBriefMini({ recipe }) {
 function GapsSummary({ gaps }) {
   const crit = gaps.filter(g=>g.severity==='critical').length;
   const warn = gaps.filter(g=>g.severity==='warning').length;
-  const dimCounts = {};
-  gaps.forEach(g=>{ dimCounts[g.dim]=(dimCounts[g.dim]||0)+1; });
-  const topDim = Object.entries(dimCounts).sort((a,b)=>b[1]-a[1])[0]?.[0];
-
   const pill = (label, n, color) => (
     <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#fff',border:'1px solid #E9ECF3',borderRadius:10,flex:1}}>
       <span style={{width:10,height:10,borderRadius:99,background:color}}/>
@@ -194,15 +190,6 @@ function GapsSummary({ gaps }) {
     <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
       {pill('Critical gaps', crit, '#F44336')}
       {pill('Warning gaps', warn, '#F59E0B')}
-      <div style={{display:'flex',alignItems:'center',gap:8,padding:'10px 14px',background:'#fff',border:'1px solid #E9ECF3',borderRadius:10,flex:1}}>
-        <div style={{width:28,height:28,borderRadius:6,background:'#EAF1FE',display:'grid',placeItems:'center'}}>
-          <Icon name="target" size={14} color="#4285F4"/>
-        </div>
-        <div>
-          <div style={{fontFamily:'Jost',fontSize:13.5,fontWeight:500,color:'#111125',lineHeight:1.2}}>{topDim}</div>
-          <div style={{fontFamily:'DM Sans',fontSize:11,color:'#6F7482',marginTop:3}}>Top gap dimension</div>
-        </div>
-      </div>
     </div>
   );
 }
