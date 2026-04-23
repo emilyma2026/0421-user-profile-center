@@ -10,62 +10,57 @@ const FUNNEL = [
 ];
 
 // ─── Survey data ──────────────────────────────────────────────────
-// Stated Preference — n=316
+// Stated Preference — work_pace / work_style / task_complexity
 const PREF_SURVEYS = [
   {
     title: 'Work pace',
-    n: 316,
     items: [
-      { label:'Speed & momentum', count:138, color:'#4285F4' },
-      { label:'Accuracy first',   count:178, color:'#9DC6FF' },
+      { label:'quick',     count:138, color:'#4285F4' },
+      { label:'thorough',  count:178, color:'#9DC6FF' },
     ],
   },
   {
-    title: 'Starting a new task',
-    n: 316,
+    title: 'Work style',
     items: [
-      { label:'Work it out alone',        count:176, color:'#4285F4' },
-      { label:'Discuss first',            count:140, color:'#9DC6FF' },
+      { label:'independent',    count:176, color:'#4285F4' },
+      { label:'collaborative',  count:140, color:'#9DC6FF' },
     ],
   },
   {
     title: 'Task complexity',
-    n: 316,
     items: [
-      { label:'Simple & quick',           count:158, color:'#4285F4' },
-      { label:'Complex & challenging',    count:158, color:'#9DC6FF' },
+      { label:'simple',   count:158, color:'#4285F4' },
+      { label:'complex',  count:158, color:'#9DC6FF' },
     ],
   },
 ];
 
-// Motivation — n=112
+// Motivation — motivations[] / leaderboard_pref
 const MOTIV_SURVEYS = [
   {
-    title: 'Why they joined',
-    n: 112,
+    title: 'Motivations',
     note: '% of responses · multi-select',
     items: [
-      { label:'Earning money',     count: 96, color:'#3160B7' },
-      { label:'Building skills',   count: 64, color:'#4285F4' },
-      { label:'Meaningful time',   count: 58, color:'#7CA9FC' },
-      { label:'Part of AI dev.',   count: 53, color:'#9DC6FF' },
-      { label:'Friend referral',   count:  6, color:'#CFE0FE' },
-      { label:'Other',             count:  2, color:'#E8F2FE' },
+      { label:'money',       count: 96, color:'#3160B7' },
+      { label:'skills',      count: 64, color:'#4285F4' },
+      { label:'productive',  count: 58, color:'#7CA9FC' },
+      { label:'contribute',  count: 53, color:'#9DC6FF' },
+      { label:'referral',    count:  6, color:'#CFE0FE' },
+      { label:'other',       count:  2, color:'#E8F2FE' },
     ],
   },
   {
-    title: 'Leaderboard attitude',
-    n: 112,
+    title: 'Leaderboard pref.',
     items: [
-      { label:'Climb to the top',     count: 55, color:'#3160B7' },
-      { label:'Beat personal best',   count: 40, color:'#7CA9FC' },
-      { label:'Ignore it',            count: 17, color:'#CFE0FE' },
+      { label:'climb',     count: 55, color:'#3160B7' },
+      { label:'personal',  count: 40, color:'#7CA9FC' },
+      { label:'ignore',    count: 17, color:'#CFE0FE' },
     ],
   },
 ];
 
 // ─── Generic survey donut ─────────────────────────────────────────
-function SurveyDonut({ title, n, note, items }) {
+function SurveyDonut({ title, note, items }) {
   const size = 110, R = 42, r2 = R - 13, cx = size/2, cy = size/2;
   const total = items.reduce((s,d) => s + d.count, 0);
   let acc = 0;
@@ -102,7 +97,6 @@ function SurveyDonut({ title, n, note, items }) {
     <div style={{display:'flex', flexDirection:'column', gap:8, minWidth:0}}>
       <div style={{fontFamily:'DM Sans', fontSize:11, fontWeight:700, color:'#111125', lineHeight:1.3}}>
         {title}
-        {n && <span style={{fontWeight:400, color:'#9AA2B1', marginLeft:5}}>n={n}</span>}
       </div>
       <div style={{display:'flex', gap:12, alignItems:'flex-start'}}>
         <svg width={size} height={size} style={{flexShrink:0}}>
@@ -198,7 +192,7 @@ function SurveyModule() {
         </div>
         <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16}}>
           {PREF_SURVEYS.map((s,i) => (
-            <SurveyDonut key={i} title={s.title} n={s.n} items={s.items}/>
+            <SurveyDonut key={i} title={s.title}items={s.items}/>
           ))}
         </div>
       </div>
@@ -210,7 +204,7 @@ function SurveyModule() {
         </div>
         <div style={{display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:16}}>
           {MOTIV_SURVEYS.map((s,i) => (
-            <SurveyDonut key={i} title={s.title} n={s.n} note={s.note} items={s.items}/>
+            <SurveyDonut key={i} title={s.title}note={s.note} items={s.items}/>
           ))}
         </div>
       </div>
