@@ -133,10 +133,9 @@ function FunnelBars() {
     <div style={{display:'grid', gridTemplateColumns:`repeat(${FUNNEL.length}, 1fr)`, gap:8, alignItems:'end'}}>
       {FUNNEL.map((s,i) => {
         const h = Math.max((s.count/max)*BAR_H, 6);
-        const prev = i>0 ? FUNNEL[i-1].count : null;
-        const rate = prev ? Math.round(s.count/prev*100) : 100;
+        const rate = Math.round(s.count / max * 100);
         const isChurn = s.stage === 'Churned';
-        const isWeak  = rate < 85;
+        const isWeak  = rate < 50;
         return (
           <div key={s.stage} style={{display:'flex', flexDirection:'column', alignItems:'center', gap:3, minWidth:0}}>
             <div style={{fontFamily:'Jost', fontSize:11, fontWeight:600, color:'#111125', fontVariantNumeric:'tabular-nums', lineHeight:1}}>
@@ -158,8 +157,8 @@ function FunnelBars() {
               {s.desc}
             </div>
             <div style={{fontFamily:'DM Sans', fontSize:9.5, fontWeight:600, lineHeight:1, marginTop:2,
-              color: i===0 ? 'transparent' : isChurn ? '#F44336' : isWeak ? '#F59E0B' : '#22C55E'}}>
-              {i===0 ? '—' : `${rate}%`}
+              color: isChurn ? '#F44336' : isWeak ? '#F59E0B' : '#22C55E'}}>
+              {rate}%
             </div>
           </div>
         );
@@ -172,9 +171,8 @@ function FunnelBars() {
 function LifecycleModule({ onNavigate }) {
   return (
     <div>
-      <div style={{fontFamily:'DM Sans', fontSize:12, fontWeight:600, color:'#111125', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-        <span>Lifecycle stages</span>
-        <span style={{color:'#6F7482', fontWeight:500, fontSize:11}}>Registered → Churned · conversion rate per stage</span>
+      <div style={{fontFamily:'DM Sans', fontSize:12, fontWeight:600, color:'#111125', marginBottom:14}}>
+        Lifecycle stages
       </div>
       <FunnelBars/>
     </div>

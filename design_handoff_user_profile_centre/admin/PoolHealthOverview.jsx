@@ -305,6 +305,7 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
       {/* 1. Alerts — full-width banner */}
       <SectionCard
         title="Alerts"
+        subtitle="Monitor pool metrics across key dimensions · alert on significant drops or threshold breaches"
         right={
           <span style={{
             display:'inline-flex',alignItems:'center',gap:6,padding:'4px 9px',
@@ -325,7 +326,7 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
       {/* 3. Lifecycle — full width */}
       <SectionCard
         title="Lifecycle"
-        subtitle="6-stage lifecycle funnel · conversion rate per stage"
+        subtitle="6-stage lifecycle funnel"
       >
         <LifecycleModule onNavigate={onNavigate}/>
       </SectionCard>
