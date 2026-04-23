@@ -332,8 +332,8 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
 
       {/* 4. Stated Preference & Motivation surveys */}
       <SectionCard
-        title="Stated Preference & Motivation"
-        subtitle="Post-registration survey · Stated Preference n=316 · Motivation n=112"
+        title="User Stated Preference & Motivation"
+        subtitle="Post-registration survey result"
       >
         <SurveyModule/>
       </SectionCard>

@@ -136,7 +136,7 @@ function DrillDownModal({ open, onClose, context }) {
                   {isGap ? action : 'Weekend availability push — APAC cohort'}
                 </div>
                 <div style={{fontFamily:'DM Sans',fontSize:13,color:'#2C2C2C',marginTop:6,lineHeight:1.55}}>
-                  {(isGap && GAP_CAMPAIGN_DESC[action]) || 'Analyse the matched segment and generate a tailored campaign brief.'}
+                  {(isGap && (context.data.recAction || GAP_CAMPAIGN_DESC[action])) || 'Analyse the matched segment and generate a tailored campaign brief.'}
                 </div>
               </div>
             </div>

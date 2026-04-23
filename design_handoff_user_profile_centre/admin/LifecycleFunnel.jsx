@@ -2,7 +2,7 @@
 
 const FUNNEL = [
   { stage:'Registered', count:12400, desc:'Account created · onboarding not started' },
-  { stage:'Onboarded',  count: 8200, desc:'Tutorial complete · no tasks finished' },
+  { stage:'Onboarded',  count: 8200, desc:'tutorial completed' },
   { stage:'Eligible',   count: 6800, desc:'First exam passed' },
   { stage:'Activated',  count: 5100, desc:'First task completed' },
   { stage:'Engaged',    count: 3800, desc:'Active within past 7 days' },
@@ -115,7 +115,7 @@ function SurveyDonut({ title, note, items }) {
               <div key={i} style={{display:'grid', gridTemplateColumns:'7px 1fr auto', gap:5, alignItems:'center'}}>
                 <span style={{width:7, height:7, borderRadius:2, background:d.color, flexShrink:0}}/>
                 <span style={{fontFamily:'DM Sans', fontSize:10.5, color:'#6F7482', lineHeight:1.2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>{d.label}</span>
-                <span style={{fontFamily:'Jost', fontSize:10.5, fontWeight:600, color:'#111125', fontVariantNumeric:'tabular-nums'}}>{pct}%</span>
+                <span style={{fontFamily:'Jost', fontSize:10.5, fontWeight:600, color:'#111125', fontVariantNumeric:'tabular-nums', whiteSpace:'nowrap'}}>{d.count} <span style={{fontWeight:400, color:'#9AA2B1'}}>({pct}%)</span></span>
               </div>
             );
           })}

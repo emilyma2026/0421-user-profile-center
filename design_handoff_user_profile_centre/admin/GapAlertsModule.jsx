@@ -99,15 +99,18 @@ const CAMPAIGN_RECIPES = {
   monitor: { channel:'—', budget:'—', timing:'—', contentHint:'Within tolerance · keep monitoring', kpi:'Re-alert threshold: coverage < 90%' },
 };
 
-// Gap card (detailed version for the list)
-function GapCard({ gap, expanded, onToggle, onLaunch }) {
+// Gap card — click anywhere to open drill-down modal
+function GapCard({ gap, onOpen }) {
   const s = _sevStyles(gap.severity);
   return (
-    <div style={{
-      background:'#fff', border:`1px solid ${expanded ? s.ring : '#E9ECF3'}`, borderRadius:12,
-      overflow:'hidden', transition:'border-color .2s'
-    }}>
-      <div style={{display:'grid', gridTemplateColumns:'8px 1fr auto', cursor:'pointer'}} onClick={onToggle}>
+    <div onClick={onOpen} style={{
+      background:'#fff', border:'1px solid #E9ECF3', borderRadius:12,
+      overflow:'hidden', cursor:'pointer', transition:'border-color .15s, box-shadow .15s',
+    }}
+      onMouseEnter={e=>{ e.currentTarget.style.borderColor=s.ring; e.currentTarget.style.boxShadow='0 2px 12px rgba(11,13,18,.07)'; }}
+      onMouseLeave={e=>{ e.currentTarget.style.borderColor='#E9ECF3'; e.currentTarget.style.boxShadow='none'; }}
+    >
+      <div style={{display:'grid', gridTemplateColumns:'8px 1fr auto'}}>
         <div style={{background:s.dot}}/>
         <div style={{padding:'14px 16px'}}>
           <div style={{display:'flex',alignItems:'center',gap:10,flexWrap:'wrap',marginBottom:6}}>
@@ -121,61 +124,20 @@ function GapCard({ gap, expanded, onToggle, onLaunch }) {
             </span>
           </div>
           <div style={{fontFamily:'Jost',fontSize:16,fontWeight:500,color:'#111125',marginBottom:4}}>{gap.title}</div>
-          <div style={{display:'flex',alignItems:'center',gap:14,flexWrap:'wrap'}}>
-            <div style={{display:'flex',alignItems:'center',gap:8,flex:1,minWidth:220,maxWidth:380}}>
-              <div style={{flex:1,height:6,background:'#F2F3F8',borderRadius:999,overflow:'hidden',position:'relative'}}>
-                <div style={{width:`${gap.pct}%`,height:'100%',background:s.dot,borderRadius:999}}/>
-              </div>
-              <span style={{fontFamily:'Jost',fontSize:12,fontWeight:600,color:'#111125',fontVariantNumeric:'tabular-nums',minWidth:80,textAlign:'right'}}>
-                {gap.available}/{gap.required} · {gap.pct}%
-              </span>
+          <div style={{display:'flex',alignItems:'center',gap:8,maxWidth:380}}>
+            <div style={{flex:1,height:6,background:'#F2F3F8',borderRadius:999,overflow:'hidden'}}>
+              <div style={{width:`${gap.pct}%`,height:'100%',background:s.dot,borderRadius:999}}/>
             </div>
+            <span style={{fontFamily:'Jost',fontSize:12,fontWeight:600,color:'#111125',fontVariantNumeric:'tabular-nums',minWidth:80,textAlign:'right'}}>
+              {gap.available}/{gap.required} · {gap.pct}%
+            </span>
           </div>
           <div style={{fontFamily:'DM Sans',fontSize:12,color:'#6F7482',marginTop:6}}>{gap.note}</div>
         </div>
         <div style={{padding:'14px 16px',display:'flex',alignItems:'center'}}>
-          <Icon name={expanded?'chevron-down':'chevron-right'} size={16} color="#6F7482"/>
+          <Icon name="chevron-right" size={16} color="#6F7482"/>
         </div>
       </div>
-
-      {expanded && (
-        <div style={{padding:'0 16px 16px 24px',borderTop:`1px solid ${s.ring}30`,background:`${s.bg}40`}}>
-          <div style={{marginTop:14,display:'flex',flexDirection:'column',gap:12}}>
-            {/* Affected projects */}
-            <div>
-              <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'#6F7482',marginBottom:8}}>
-                Affected projects
-              </div>
-              <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
-                {gap.projects.map(p=>(
-                  <button key={p} onClick={(e)=>e.stopPropagation()} style={{
-                    padding:'4px 12px',borderRadius:999,background:'#fff',border:'1px solid #E1E4EC',
-                    fontFamily:'DM Sans',fontSize:11.5,color:'#2C2C2C',cursor:'pointer',
-                    transition:'background .15s,border-color .15s',
-                  }}
-                    onMouseEnter={e=>{e.currentTarget.style.background='#F4F8FF';e.currentTarget.style.borderColor='#4285F4';e.currentTarget.style.color='#1E4FA8';}}
-                    onMouseLeave={e=>{e.currentTarget.style.background='#fff';e.currentTarget.style.borderColor='#E1E4EC';e.currentTarget.style.color='#2C2C2C';}}
-                  >{p}</button>
-                ))}
-              </div>
-            </div>
-
-            {/* Recommended action */}
-            {gap.recAction && (
-              <div style={{padding:'12px 14px',background:'#F4F8FF',border:'1px solid #DBE9FF',borderRadius:10,display:'flex',gap:10,alignItems:'flex-start'}}>
-                <div style={{width:28,height:28,borderRadius:7,background:'#4285F4',display:'grid',placeItems:'center',flexShrink:0,marginTop:1}}>
-                  <Icon name="sparkle" size={13} color="#fff"/>
-                </div>
-                <div>
-                  <div style={{fontFamily:'DM Sans',fontSize:10.5,fontWeight:700,letterSpacing:'.07em',textTransform:'uppercase',color:'#3160B7',marginBottom:4}}>Recommended action</div>
-                  <div style={{fontFamily:'DM Sans',fontSize:12.5,color:'#2C2C2C',lineHeight:1.6}}>{gap.recAction}</div>
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
     </div>
   );
 }
@@ -247,9 +209,18 @@ function GapsSummary({ gaps }) {
 
 // Main module
 function GapAlertsModule() {
-  const [expanded, setExpanded] = React.useState('gap-ph-dormant');
+  const [drill, setDrill] = React.useState(null);
   const [sev, setSev] = React.useState('all');
   const [dim, setDim] = React.useState('all');
+
+  const openDrill = gap => setDrill({
+    kind: 'gap',
+    data: {
+      ...gap,
+      coverage: gap.pct,
+      stat: gap.available + '/' + gap.required,
+    },
+  });
 
   const visible = [...ALL_GAPS.filter(g =>
     (sev==='all' || g.severity===sev) &&
@@ -311,11 +282,7 @@ function GapAlertsModule() {
       {/* Gap list */}
       <div style={{display:'flex',flexDirection:'column',gap:10}}>
         {visible.map(g=>(
-          <GapCard key={g.id} gap={g}
-            expanded={expanded===g.id}
-            onToggle={()=>setExpanded(expanded===g.id?null:g.id)}
-            onLaunch={()=>{}}
-          />
+          <GapCard key={g.id} gap={g} onOpen={()=>openDrill(g)}/>
         ))}
         {visible.length === 0 && (
           <div style={{padding:'48px 24px',textAlign:'center',background:'#fff',border:'1px dashed #D6D9E1',borderRadius:12,fontFamily:'DM Sans',color:'#6F7482'}}>
@@ -323,6 +290,8 @@ function GapAlertsModule() {
           </div>
         )}
       </div>
+
+      <DrillDownModal open={!!drill} onClose={()=>setDrill(null)} context={drill}/>
     </div>
   );
 }
