@@ -102,7 +102,7 @@ function SegmentBuilder({ draft, setDraft, onSubmit, resultCount }) {
   const reset = () => setDraft({ country:[], lang:[], minAcc:0, headcount:'' });
   return (
     <aside style={{
-      width:210, flexShrink:0, background:'#fff', border:'1px solid #E9ECF3',
+      width:250, flexShrink:0, background:'#fff', border:'1px solid #E9ECF3',
       borderRadius:12, display:'flex', flexDirection:'column', overflow:'visible',
       alignSelf:'flex-start',
     }}>
@@ -311,7 +311,7 @@ function AIRecommendations({ filters, users, headcount }) {
 
   if(!hasFilters) {
     return (
-      <aside style={{width:248,flexShrink:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,padding:'20px 16px',alignSelf:'flex-start'}}>
+      <aside style={{width:290,flexShrink:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,padding:'20px 16px',alignSelf:'flex-start'}}>
         <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125',marginBottom:4}}>Recommendation</div>
         <div style={{fontFamily:'DM Sans',fontSize:12,color:'#9AA2B1',lineHeight:1.6}}>Apply a filter to see recommended actions based on your segment.</div>
         <div style={{marginTop:16,padding:'12px',background:'#F7F8FB',borderRadius:8,display:'flex',alignItems:'center',gap:8}}>
@@ -365,7 +365,7 @@ function AIRecommendations({ filters, users, headcount }) {
   const totalActions = 1 + recruitmentGaps.length; // engagement card always counts
 
   return (
-    <aside style={{width:248,flexShrink:0,background:'#F7F8FB',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden',alignSelf:'flex-start',display:'flex',flexDirection:'column'}}>
+    <aside style={{width:290,flexShrink:0,background:'#F7F8FB',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden',alignSelf:'flex-start',display:'flex',flexDirection:'column'}}>
       <div style={{padding:'12px 14px',borderBottom:'1px solid #E9ECF3',background:'#fff',display:'flex',alignItems:'center',gap:8}}>
         <div style={{width:24,height:24,borderRadius:6,background:'#EAF1FE',display:'grid',placeItems:'center'}}>
           <Icon name="sparkle" size={12} color="#4285F4"/>
@@ -466,10 +466,13 @@ function UserExplorer() {
       <div style={{display:'flex',gap:10,alignItems:'flex-start'}}>
         <SegmentBuilder draft={draft} setDraft={setDraft} onSubmit={applyFilter} resultCount={committed ? approxCount : Math.round(USERS.length / USERS.length * 30600)}/>
 
-        <div style={{flex:1,minWidth:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden'}}>
+        <div style={{flex:1,minWidth:0,maxWidth:'calc(100% - 560px)',background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden'}}>
           <div style={{padding:'11px 16px',borderBottom:'1px solid #F2F3F8',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-            <div style={{fontFamily:'DM Sans',fontSize:13,fontWeight:600,color:'#111125'}}>
-              {filtered.length} users <span style={{fontWeight:400,color:'#6F7482'}}>· preview sample</span>
+            <div>
+              <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125'}}>User Results Table</div>
+              <div style={{fontFamily:'DM Sans',fontSize:11.5,fontWeight:400,color:'#6F7482',marginTop:1}}>
+                {filtered.length} users · preview sample
+              </div>
             </div>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
               {selected.size>0 && <span style={{fontFamily:'DM Sans',fontSize:11.5,color:'#4285F4',fontWeight:600}}>{selected.size} selected</span>}
