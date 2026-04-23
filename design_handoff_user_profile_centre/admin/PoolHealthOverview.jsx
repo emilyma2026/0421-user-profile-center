@@ -207,6 +207,69 @@ function SectionCard({ title, subtitle, right, children, padding=20 }) {
   );
 }
 
+// ─── Region Dropdown ──────────────────────────────────────────────
+const REGION_OPTIONS = [
+  { value:'all',          label:'All regions' },
+  { value:'Philippines',  label:'🇵🇭 Philippines' },
+  { value:'Indonesia',    label:'🇮🇩 Indonesia' },
+  { value:'Vietnam',      label:'🇻🇳 Vietnam' },
+  { value:'Thailand',     label:'🇹🇭 Thailand' },
+  { value:'Egypt',        label:'🇪🇬 Egypt' },
+  { value:'Mexico',       label:'🇲🇽 Mexico' },
+  { value:'Malaysia',     label:'🇲🇾 Malaysia' },
+  { value:'Singapore',    label:'🇸🇬 Singapore' },
+];
+function RegionDropdown({ value, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+  React.useEffect(() => {
+    const h = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+  const selected = REGION_OPTIONS.find(o => o.value === value) || REGION_OPTIONS[0];
+  return (
+    <div ref={ref} style={{position:'relative'}}>
+      <button onClick={()=>setOpen(!open)} style={{
+        display:'inline-flex',alignItems:'center',gap:8,
+        padding:'6px 10px',border:'1px solid #E1E4EC',borderRadius:8,
+        background:'#fff',cursor:'pointer',minWidth:148,
+        fontFamily:'DM Sans',fontSize:12.5,color:'#2C2C2C',
+        boxShadow:open ? '0 0 0 2px #4285F420' : 'none',
+      }}>
+        <Icon name="globe" size={13} color="#6F7482"/>
+        <span style={{flex:1,textAlign:'left'}}>{selected.label}</span>
+        <Icon name="chevron-down" size={11} color="#9AA2B1"/>
+      </button>
+      {open && (
+        <div style={{
+          position:'absolute',top:'calc(100% + 4px)',left:0,zIndex:300,
+          background:'#fff',border:'1px solid #E1E4EC',borderRadius:8,
+          boxShadow:'0 8px 24px rgba(11,13,18,.12)',
+          minWidth:170,overflow:'hidden',
+        }}>
+          {REGION_OPTIONS.map(o=>(
+            <button key={o.value} onClick={()=>{onChange(o.value);setOpen(false);}} style={{
+              display:'flex',alignItems:'center',gap:8,width:'100%',
+              padding:'8px 12px',border:0,background: o.value===value ? '#F4F8FF' : 'transparent',
+              cursor:'pointer',textAlign:'left',
+              fontFamily:'DM Sans',fontSize:12.5,
+              color: o.value===value ? '#1E4FA8' : '#2C2C2C',
+              fontWeight: o.value===value ? 600 : 400,
+            }}
+              onMouseEnter={e=>{ if(o.value!==value) e.currentTarget.style.background='#FAFBFC'; }}
+              onMouseLeave={e=>{ e.currentTarget.style.background = o.value===value ? '#F4F8FF' : 'transparent'; }}
+            >
+              {o.label}
+              {o.value===value && <span style={{marginLeft:'auto',color:'#4285F4',fontSize:13}}>✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Overview ────────────────────────────────────────────────
 function PoolHealthOverview({ onOpenDrill, onNavigate }) {
   const makeDefault = () => {
@@ -215,6 +278,7 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
     return { start, end };
   };
   const [dateRange, setDateRange] = React.useState(makeDefault);
+  const [region, setRegion] = React.useState('all');
 
   return (
     <div style={{padding:24, display:'flex', flexDirection:'column', gap:16}}>
@@ -226,6 +290,7 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
           </div>
         </div>
         <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <RegionDropdown value={region} onChange={setRegion}/>
           <DateRangePicker
             start={dateRange.start}
             end={dateRange.end}
@@ -270,18 +335,6 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
         <LifecycleModule onNavigate={onNavigate}/>
       </SectionCard>
 
-      {/* 4. Activation by Region — full width */}
-      <SectionCard
-        title="Activation by Region"
-        subtitle="Registered vs engaged (task labelling behaviour) across Start.AI's 8 coverage countries"
-        right={
-          <button onClick={()=>onNavigate && onNavigate('explorer')} style={{display:'inline-flex',alignItems:'center',gap:5,padding:'6px 10px',border:'1px solid #E1E1E1',borderRadius:7,background:'#fff',cursor:'pointer',fontFamily:'DM Sans',fontSize:12,fontWeight:500,color:'#2C2C2C'}}>
-            View all regions <Icon name="arrow-right" size={11} color="#6F7482"/>
-          </button>
-        }
-      >
-        <RegionActivation/>
-      </SectionCard>
     </div>
   );
 }
