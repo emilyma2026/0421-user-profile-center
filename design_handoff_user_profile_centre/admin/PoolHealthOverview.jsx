@@ -325,7 +325,7 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
       {/* 3. Lifecycle — full width */}
       <SectionCard
         title="Lifecycle"
-        subtitle="6-stage lifecycle funnel · Registered → Onboarded → Eligible → Activated → Engaged → Churned"
+        subtitle="Lifecycle funnel · Stated Preference · Motivation"
         right={
           <button style={{display:'inline-flex',alignItems:'center',gap:5,padding:'6px 10px',border:'1px solid #E1E1E1',borderRadius:7,background:'#fff',cursor:'pointer',fontFamily:'DM Sans',fontSize:12,fontWeight:500,color:'#2C2C2C'}}>
             Compare cohort <Icon name="chevron-down" size={11} color="#6F7482"/>
