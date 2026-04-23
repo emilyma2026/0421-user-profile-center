@@ -128,7 +128,19 @@ function SegmentBuilder({ draft, setDraft, onSubmit, resultCount }) {
           options={['English','Spanish','Arabic','Vietnamese','Thai','Bahasa Indonesia','Malay','Tagalog']}
           value={draft.lang||[]} onChange={v=>setDraft({...draft,lang:v})}/>
         <AccuracyBar value={draft.minAcc||0} onChange={v=>setDraft({...draft,minAcc:v})}/>
-        <div>
+      </div>
+
+      <div style={{padding:'12px 14px', borderTop:'1px solid #F2F3F8', display:'flex', flexDirection:'column', gap:12}}>
+        <button onClick={onSubmit} style={{
+          width:'100%', padding:'9px', background:'#4285F4', color:'#fff', border:0, borderRadius:7,
+          fontFamily:'DM Sans',fontSize:12.5,fontWeight:600,cursor:'pointer',
+          display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6,
+        }}>
+          <Icon name="filter" size={13} color="#fff"/> Apply Filter
+        </button>
+
+        {/* Headcount requirement — below apply, compared against matched results */}
+        <div style={{borderTop:'1px solid #F2F3F8', paddingTop:12}}>
           <div style={{fontFamily:'DM Sans',fontSize:10.5,color:'#6F7482',marginBottom:4,fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}>Headcount requirement</div>
           <div style={{position:'relative'}}>
             <input type="number" min={1} placeholder="e.g. 50"
@@ -141,17 +153,12 @@ function SegmentBuilder({ draft, setDraft, onSubmit, resultCount }) {
               }}/>
             <span style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',fontFamily:'DM Sans',fontSize:10.5,color:'#9AA2B1',pointerEvents:'none'}}>users</span>
           </div>
+          <div style={{marginTop:6, fontFamily:'DM Sans', fontSize:10.5, color:'#9AA2B1', lineHeight:1.5}}>
+            Expected number of users for this segment — compared against the{' '}
+            <span style={{color:'#4285F4', fontWeight:600}}>{resultCount.toLocaleString()} matched</span>{' '}
+            by the applied filters.
+          </div>
         </div>
-      </div>
-
-      <div style={{padding:'12px 14px', borderTop:'1px solid #F2F3F8'}}>
-        <button onClick={onSubmit} style={{
-          width:'100%', padding:'9px', background:'#4285F4', color:'#fff', border:0, borderRadius:7,
-          fontFamily:'DM Sans',fontSize:12.5,fontWeight:600,cursor:'pointer',
-          display:'inline-flex',alignItems:'center',justifyContent:'center',gap:6,
-        }}>
-          <Icon name="filter" size={13} color="#fff"/> Apply Filter
-        </button>
       </div>
     </aside>
   );
