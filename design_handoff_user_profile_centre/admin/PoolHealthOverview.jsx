@@ -325,14 +325,17 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
       {/* 3. Lifecycle — full width */}
       <SectionCard
         title="Lifecycle"
-        subtitle="Lifecycle funnel · Stated Preference · Motivation"
-        right={
-          <button style={{display:'inline-flex',alignItems:'center',gap:5,padding:'6px 10px',border:'1px solid #E1E1E1',borderRadius:7,background:'#fff',cursor:'pointer',fontFamily:'DM Sans',fontSize:12,fontWeight:500,color:'#2C2C2C'}}>
-            Compare cohort <Icon name="chevron-down" size={11} color="#6F7482"/>
-          </button>
-        }
+        subtitle="6-stage lifecycle funnel · conversion rate per stage"
       >
         <LifecycleModule onNavigate={onNavigate}/>
+      </SectionCard>
+
+      {/* 4. Stated Preference & Motivation surveys */}
+      <SectionCard
+        title="Stated Preference & Motivation"
+        subtitle="Post-registration survey · Stated Preference n=316 · Motivation n=112"
+      >
+        <SurveyModule/>
       </SectionCard>
 
     </div>

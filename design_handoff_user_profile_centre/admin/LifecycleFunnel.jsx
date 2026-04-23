@@ -174,45 +174,44 @@ function FunnelBars() {
   );
 }
 
-// ─── Combined module ──────────────────────────────────────────────
+// ─── Lifecycle module (funnel only) ───────────────────────────────
 function LifecycleModule({ onNavigate }) {
   return (
-    <div style={{display:'flex', flexDirection:'column', gap:24}}>
-      {/* Funnel */}
+    <div>
+      <div style={{fontFamily:'DM Sans', fontSize:12, fontWeight:600, color:'#111125', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <span>Lifecycle stages</span>
+        <span style={{color:'#6F7482', fontWeight:500, fontSize:11}}>Registered → Churned · conversion rate per stage</span>
+      </div>
+      <FunnelBars/>
+    </div>
+  );
+}
+
+// ─── Survey module (stated preference + motivation) ────────────────
+function SurveyModule() {
+  return (
+    <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:24}}>
+      {/* Stated Preference */}
       <div>
-        <div style={{fontFamily:'DM Sans', fontSize:12, fontWeight:600, color:'#111125', marginBottom:14, display:'flex', alignItems:'center', justifyContent:'space-between'}}>
-          <span>Lifecycle stages</span>
-          <span style={{color:'#6F7482', fontWeight:500, fontSize:11}}>Registered → Churned · conversion rate per stage</span>
+        <div style={{fontFamily:'DM Sans', fontSize:11.5, fontWeight:700, color:'#6F7482', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:14}}>
+          Stated Preference
         </div>
-        <FunnelBars/>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16}}>
+          {PREF_SURVEYS.map((s,i) => (
+            <SurveyDonut key={i} title={s.title} n={s.n} items={s.items}/>
+          ))}
+        </div>
       </div>
 
-      <div style={{borderTop:'1px solid #F2F3F8'}}/>
-
-      {/* Survey pies */}
-      <div style={{display:'grid', gridTemplateColumns:'1fr 1fr', gap:24}}>
-        {/* Stated Preference */}
-        <div>
-          <div style={{fontFamily:'DM Sans', fontSize:11.5, fontWeight:700, color:'#6F7482', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:14}}>
-            Stated Preference
-          </div>
-          <div style={{display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16}}>
-            {PREF_SURVEYS.map((s,i) => (
-              <SurveyDonut key={i} title={s.title} n={s.n} items={s.items}/>
-            ))}
-          </div>
+      {/* Motivation */}
+      <div style={{borderLeft:'1px solid #F2F3F8', paddingLeft:24}}>
+        <div style={{fontFamily:'DM Sans', fontSize:11.5, fontWeight:700, color:'#6F7482', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:14}}>
+          Motivation
         </div>
-
-        {/* Motivation */}
-        <div style={{borderLeft:'1px solid #F2F3F8', paddingLeft:24}}>
-          <div style={{fontFamily:'DM Sans', fontSize:11.5, fontWeight:700, color:'#6F7482', textTransform:'uppercase', letterSpacing:'.06em', marginBottom:14}}>
-            Motivation
-          </div>
-          <div style={{display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:16}}>
-            {MOTIV_SURVEYS.map((s,i) => (
-              <SurveyDonut key={i} title={s.title} n={s.n} note={s.note} items={s.items}/>
-            ))}
-          </div>
+        <div style={{display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:16}}>
+          {MOTIV_SURVEYS.map((s,i) => (
+            <SurveyDonut key={i} title={s.title} n={s.n} note={s.note} items={s.items}/>
+          ))}
         </div>
       </div>
     </div>
@@ -220,4 +219,5 @@ function LifecycleModule({ onNavigate }) {
 }
 
 window.LifecycleModule = LifecycleModule;
+window.SurveyModule = SurveyModule;
 window.FunnelBars = FunnelBars;
