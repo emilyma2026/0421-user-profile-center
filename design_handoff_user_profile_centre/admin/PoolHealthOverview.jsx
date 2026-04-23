@@ -320,8 +320,10 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
         <GapAlertPanel onOpen={(g)=>onOpenDrill({kind:'gap',data:g})} onViewAll={()=>onNavigate && onNavigate('gaps')}/>
       </SectionCard>
 
-      {/* 2. Trends — 4 KPI cards */}
-      <TrendsStrip/>
+      {/* 2. Key Metrics Trend — 4 KPI cards */}
+      <SectionCard title="Key Metrics Trend">
+        <TrendsStrip/>
+      </SectionCard>
 
       {/* 3. Lifecycle — full width */}
       <SectionCard
@@ -334,7 +336,7 @@ function PoolHealthOverview({ onOpenDrill, onNavigate }) {
       {/* 4. Stated Preference & Motivation surveys */}
       <SectionCard
         title="User Stated Preference & Motivation"
-        subtitle="Post-registration survey result"
+        subtitle="Post-registration and post-first task survey results"
       >
         <SurveyModule/>
       </SectionCard>
