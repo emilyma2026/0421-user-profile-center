@@ -54,13 +54,12 @@
 <script type="text/babel">
 function App() {
   const [tab, setTab] = React.useState(() => localStorage.getItem('startai-admin-tab') || 'overview');
-  const [range, setRange] = React.useState('30d');
   const [drill, setDrill] = React.useState(null);
   const onNavigate = (k) => { setTab(k); localStorage.setItem('startai-admin-tab', k); };
 
   const page = (() => {
     switch(tab){
-      case 'overview':  return <PoolHealthOverview onOpenDrill={setDrill} range={range} setRange={setRange} onNavigate={onNavigate}/>;
+      case 'overview':  return <PoolHealthOverview onOpenDrill={setDrill} onNavigate={onNavigate}/>;
       case 'explorer':  return <UserExplorer/>;
       case 'gaps':      return <GapAlertsModule/>;
       case 'analytics': return <AnalyticsModule/>;

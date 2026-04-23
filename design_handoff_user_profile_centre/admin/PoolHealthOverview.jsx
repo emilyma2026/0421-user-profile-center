@@ -1,11 +1,194 @@
 // Pool Health Overview page composition.
-// Layout:
-//  [ Header row: breadcrumb + actions ]
-//  [ Gap Alerts — full-width banner ]
-//  [ Trends: Total Labellers | Retention | Activation | Avg Daily Hours ]
-//  [ Lifecycle — full width ]
-//  [ Activation by Region — full width ]
 
+// ─── Date Range Picker ────────────────────────────────────────────
+function DateRangePicker({ start, end, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const [phase, setPhase] = React.useState('start');
+  const [pendingStart, setPendingStart] = React.useState(null);
+  const [hovered, setHovered] = React.useState(null);
+  const [leftMonth, setLeftMonth] = React.useState(() => {
+    const d = start ? new Date(start) : new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    const h = e => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false); setPhase('start'); setPendingStart(null); setHovered(null);
+      }
+    };
+    document.addEventListener('mousedown', h);
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
+  const rightMonth = new Date(leftMonth.getFullYear(), leftMonth.getMonth() + 1, 1);
+  const today = new Date(); today.setHours(0,0,0,0);
+
+  const fmtLabel = d => d ? d.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '—';
+  const monthLabel = m => {
+    const y = m.getFullYear(), mo = String(m.getMonth()+1).padStart(2,'0');
+    return y + '-' + mo;
+  };
+
+  const buildDays = monthStart => {
+    const y = monthStart.getFullYear(), mo = monthStart.getMonth();
+    const firstDow = monthStart.getDay();
+    const dim = new Date(y, mo+1, 0).getDate();
+    const days = [];
+    for (let i = 0; i < firstDow; i++) days.push({date: new Date(y, mo, i-firstDow+1), outside:true});
+    for (let d = 1; d <= dim; d++) days.push({date: new Date(y, mo, d), outside:false});
+    const rem = 7 - (days.length % 7);
+    if (rem < 7) for (let d=1; d<=rem; d++) days.push({date: new Date(y, mo+1, d), outside:true});
+    return days;
+  };
+
+  const handleClick = date => {
+    if (phase === 'start') { setPendingStart(date); setPhase('end'); }
+    else {
+      let s = pendingStart, e = date;
+      if (e < s) { const t=s; s=e; e=t; }
+      onChange(s, e);
+      setOpen(false); setPhase('start'); setPendingStart(null); setHovered(null);
+    }
+  };
+
+  const rangeStart = pendingStart || start;
+  const rangeEnd   = phase === 'end' && hovered ? hovered : end;
+
+  const inRange = date => {
+    if (!rangeStart || !rangeEnd) return false;
+    const lo = rangeStart < rangeEnd ? rangeStart : rangeEnd;
+    const hi = rangeStart < rangeEnd ? rangeEnd   : rangeStart;
+    return date > lo && date < hi;
+  };
+  const isStart = date => rangeStart && date.getTime() === rangeStart.getTime();
+  const isEnd   = date => rangeEnd   && date.getTime() === rangeEnd.getTime();
+  const isToday = date => date.getTime() === today.getTime();
+
+  const renderMonth = monthStart => {
+    const days  = buildDays(monthStart);
+    const weeks = [];
+    for (let i=0; i<days.length; i+=7) weeks.push(days.slice(i,i+7));
+    return (
+      <div style={{minWidth:234}}>
+        <div style={{textAlign:'center',fontFamily:'Jost',fontSize:14,fontWeight:600,color:'#111125',marginBottom:10}}>
+          {monthLabel(monthStart)}
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,32px)',gap:'2px 0',marginBottom:4}}>
+          {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d=>(
+            <div key={d} style={{textAlign:'center',fontFamily:'DM Sans',fontSize:10,fontWeight:600,color:'#9AA2B1',padding:'3px 0'}}>{d}</div>
+          ))}
+        </div>
+        <div style={{display:'flex',flexDirection:'column',gap:1}}>
+          {weeks.map((week,wi)=>(
+            <div key={wi} style={{display:'grid',gridTemplateColumns:'repeat(7,32px)'}}>
+              {week.map((day,di)=>{
+                const sel_s = isStart(day.date);
+                const sel_e = isEnd(day.date);
+                const sel   = sel_s || sel_e;
+                const rng   = inRange(day.date);
+                const tod   = isToday(day.date);
+                const isFirstOfRow = di === 0;
+                const isLastOfRow  = di === 6;
+                let bandRadius = '0';
+                if (sel_s) bandRadius = '50% 0 0 50%';
+                else if (sel_e) bandRadius = '0 50% 50% 0';
+                else if (rng && isFirstOfRow) bandRadius = '4px 0 0 4px';
+                else if (rng && isLastOfRow)  bandRadius = '0 4px 4px 0';
+                return (
+                  <div key={di}
+                    onClick={() => !day.outside && handleClick(day.date)}
+                    onMouseEnter={() => phase==='end' && !day.outside && setHovered(day.date)}
+                    style={{
+                      position:'relative', height:32,
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      background:(rng||sel) ? '#EAF1FE' : 'transparent',
+                      borderRadius:bandRadius,
+                      cursor:day.outside ? 'default' : 'pointer',
+                    }}>
+                    <div style={{
+                      width:28, height:28, borderRadius:'50%',
+                      background:sel ? '#4285F4' : 'transparent',
+                      display:'flex', alignItems:'center', justifyContent:'center',
+                      fontFamily:'DM Sans', fontSize:12.5,
+                      fontWeight:sel ? 700 : 400,
+                      color:sel ? '#fff' : day.outside ? '#D6D9E1' : '#111125',
+                    }}>
+                      {day.date.getDate()}
+                    </div>
+                    {tod && !sel && (
+                      <div style={{position:'absolute',bottom:3,left:'50%',transform:'translateX(-50%)',width:4,height:4,borderRadius:'50%',background:'#4285F4'}}/>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div ref={ref} style={{position:'relative'}}>
+      <button onClick={()=>setOpen(!open)} style={{
+        display:'inline-flex',alignItems:'center',gap:8,
+        padding:'6px 12px',border:'1px solid #E1E4EC',borderRadius:8,
+        background:'#fff',cursor:'pointer',
+        fontFamily:'DM Sans',fontSize:12.5,color:'#2C2C2C',
+        boxShadow:open ? '0 0 0 2px #4285F420' : 'none',
+      }}>
+        <Icon name="calendar" size={13} color="#6F7482"/>
+        <span>{fmtLabel(start)}</span>
+        <span style={{color:'#9AA2B1',fontSize:11,margin:'0 2px'}}>—</span>
+        <span>{fmtLabel(end)}</span>
+      </button>
+      {open && (
+        <div style={{
+          position:'absolute',top:'calc(100% + 6px)',right:0,zIndex:300,
+          background:'#fff',border:'1px solid #E1E4EC',borderRadius:12,
+          boxShadow:'0 12px 32px rgba(11,13,18,.14)',
+          padding:'16px 20px',userSelect:'none',
+        }}>
+          {/* Nav header */}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:14}}>
+            <div style={{display:'flex',gap:1}}>
+              {[
+                {label:'«', fn:()=>setLeftMonth(m=>new Date(m.getFullYear()-1,m.getMonth(),1))},
+                {label:'‹', fn:()=>setLeftMonth(m=>new Date(m.getFullYear(),m.getMonth()-1,1))},
+              ].map(b=>(
+                <button key={b.label} onClick={b.fn} style={{background:'none',border:0,cursor:'pointer',color:'#6F7482',fontSize:15,padding:'2px 6px',borderRadius:4,lineHeight:1}}>{b.label}</button>
+              ))}
+            </div>
+            <div style={{flex:1}}/>
+            <div style={{display:'flex',gap:1}}>
+              {[
+                {label:'›', fn:()=>setLeftMonth(m=>new Date(m.getFullYear(),m.getMonth()+1,1))},
+                {label:'»', fn:()=>setLeftMonth(m=>new Date(m.getFullYear()+1,m.getMonth(),1))},
+              ].map(b=>(
+                <button key={b.label} onClick={b.fn} style={{background:'none',border:0,cursor:'pointer',color:'#6F7482',fontSize:15,padding:'2px 6px',borderRadius:4,lineHeight:1}}>{b.label}</button>
+              ))}
+            </div>
+          </div>
+          {/* Two calendars */}
+          <div style={{display:'flex',gap:20,alignItems:'flex-start'}}>
+            {renderMonth(leftMonth)}
+            <div style={{width:1,background:'#F2F3F8',alignSelf:'stretch'}}/>
+            {renderMonth(rightMonth)}
+          </div>
+          {phase === 'end' && (
+            <div style={{marginTop:10,textAlign:'center',fontFamily:'DM Sans',fontSize:11,color:'#9AA2B1'}}>
+              Click to select end date
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Section Card ─────────────────────────────────────────────────
 function SectionCard({ title, subtitle, right, children, padding=20 }) {
   return (
     <section style={{
@@ -24,56 +207,39 @@ function SectionCard({ title, subtitle, right, children, padding=20 }) {
   );
 }
 
-function PageHeader({ onRefresh, range, setRange }) {
-  const ranges = ['7d','30d','90d','QTD','YTD'];
-  return (
-    <div style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',gap:16, marginBottom:16}}>
-      <div>
-        <div style={{fontFamily:'DM Sans',fontSize:17,fontWeight:700,color:'#111125'}}>
-          Pool Health Overview
-        </div>
-        <div style={{fontFamily:'DM Sans',fontSize:12.5,color:'#6F7482',marginTop:2}}>
-          At-a-glance view of the entire labeller supply pool · updated 4 min ago
-        </div>
-      </div>
-      <div style={{display:'flex',gap:8,alignItems:'center'}}>
-        <div style={{display:'flex',alignItems:'center',gap:2,background:'#F2F3F8',borderRadius:8,padding:3}}>
-          {ranges.map(r=>(
-            <button key={r} onClick={()=>setRange(r)} style={{
-              padding:'5px 10px', border:0, borderRadius:6, cursor:'pointer',
-              background: r===range ? '#fff' : 'transparent',
-              color: r===range ? '#111125' : '#6F7482',
-              boxShadow: r===range ? '0 1px 2px rgba(32,32,58,.08)' : 'none',
-              fontFamily:'DM Sans', fontSize:12, fontWeight:600,
-            }}>{r}</button>
-          ))}
-        </div>
-        <button style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 11px',border:'1px solid #E1E4EC',borderRadius:7,background:'#fff',cursor:'pointer',fontFamily:'DM Sans',fontSize:12.5,fontWeight:500,color:'#2C2C2C'}}>
-          <Icon name="filter" size={13}/> Segment: All
-        </button>
-        <button onClick={onRefresh} style={{width:32,height:32,border:'1px solid #E1E4EC',borderRadius:7,background:'#fff',cursor:'pointer',display:'grid',placeItems:'center'}}>
-          <Icon name="refresh" size={14}/>
-        </button>
-        <button style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 12px',border:'1px solid #E1E4EC',borderRadius:7,background:'#fff',cursor:'pointer',fontFamily:'DM Sans',fontSize:12.5,fontWeight:500,color:'#2C2C2C'}}>
-          <Icon name="download" size={13}/> Export
-        </button>
-        <button style={{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 14px',border:0,borderRadius:7,background:'#4285F4',cursor:'pointer',fontFamily:'DM Sans',fontSize:12.5,fontWeight:600,color:'#fff'}}>
-          <Icon name="sparkle" size={13} color="#fff"/> Ask Assistant
-        </button>
-      </div>
-    </div>
-  );
-}
+// ─── Main Overview ────────────────────────────────────────────────
+function PoolHealthOverview({ onOpenDrill, onNavigate }) {
+  const makeDefault = () => {
+    const end = new Date(); end.setHours(0,0,0,0);
+    const start = new Date(end); start.setDate(start.getDate() - 30);
+    return { start, end };
+  };
+  const [dateRange, setDateRange] = React.useState(makeDefault);
 
-function PoolHealthOverview({ onOpenDrill, range, setRange, onNavigate }) {
   return (
     <div style={{padding:24, display:'flex', flexDirection:'column', gap:16}}>
-      <PageHeader onRefresh={()=>{}} range={range} setRange={setRange}/>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,marginBottom:0}}>
+        <div>
+          <div style={{fontFamily:'DM Sans',fontSize:17,fontWeight:700,color:'#111125'}}>Pool Health Overview</div>
+          <div style={{fontFamily:'DM Sans',fontSize:12.5,color:'#6F7482',marginTop:2}}>
+            At-a-glance view of the entire labeller supply pool · updated 4 min ago
+          </div>
+        </div>
+        <div style={{display:'flex',gap:8,alignItems:'center'}}>
+          <DateRangePicker
+            start={dateRange.start}
+            end={dateRange.end}
+            onChange={(s,e)=>setDateRange({start:s,end:e})}
+          />
+          <button style={{width:34,height:34,border:'1px solid #E1E4EC',borderRadius:7,background:'#fff',cursor:'pointer',display:'grid',placeItems:'center'}}>
+            <Icon name="refresh" size={14}/>
+          </button>
+        </div>
+      </div>
 
-      {/* 1. Gap Alerts — full-width banner */}
+      {/* 1. Alerts — full-width banner */}
       <SectionCard
         title="Alerts"
-        subtitle="Ranked by severity × impact — auto-generated from gap scoring logic"
         right={
           <span style={{
             display:'inline-flex',alignItems:'center',gap:6,padding:'4px 9px',
@@ -94,7 +260,7 @@ function PoolHealthOverview({ onOpenDrill, range, setRange, onNavigate }) {
       {/* 3. Lifecycle — full width */}
       <SectionCard
         title="Lifecycle"
-        subtitle="Funnel, stage distribution & activation micro-funnel"
+        subtitle="Funnel and stage distribution"
         right={
           <button style={{display:'inline-flex',alignItems:'center',gap:5,padding:'6px 10px',border:'1px solid #E1E1E1',borderRadius:7,background:'#fff',cursor:'pointer',fontFamily:'DM Sans',fontSize:12,fontWeight:500,color:'#2C2C2C'}}>
             Compare cohort <Icon name="chevron-down" size={11} color="#6F7482"/>
