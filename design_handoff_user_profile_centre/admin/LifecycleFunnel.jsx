@@ -50,7 +50,7 @@ const MOTIV_SURVEYS = [
     ],
   },
   {
-    title: 'Leaderboard pref.',
+    title: 'Leaderboard performance',
     items: [
       { label:'climb',     count: 55, color:'#3160B7' },
       { label:'personal',  count: 40, color:'#7CA9FC' },
