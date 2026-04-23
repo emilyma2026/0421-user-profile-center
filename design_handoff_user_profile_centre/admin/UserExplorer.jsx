@@ -28,12 +28,6 @@ const USERS = [
   { id:'U-84760', country:'Egypt',       flag:'\uD83C\uDDEA\uD83C\uDDEC', lang:'Arabic',            stage:'Onboarded', archetype:'potential',    reg:'2025-03-01', acc:77, churn:44, trajectory:'flat', lastActive:'9d ago',  volTier:'L1', accTier:'L1' },
 ];
 
-// Language pool capacity (total available in full dataset, for gap analysis)
-const LANG_POOL = {
-  English:820, Spanish:62, Arabic:180, Vietnamese:420, Thai:280,
-  'Bahasa Indonesia':550, Malay:220, Tagalog:380,
-};
-
 // ─── Multi-select dropdown ──────────────────────────────────────
 function MultiSelect({ label, options, value, onChange }) {
   const [open, setOpen] = React.useState(false);
@@ -238,94 +232,84 @@ function UserTable({ users, onOpen, selected, setSelected }) {
   );
 }
 
-// ─── AI Recommendation cards ──────────────────────────────────
+// ─── Recommendation cards ─────────────────────────────────────
 
-// RecoCard — used for existing-user campaigns (re-engagement, quality, etc.)
-function RecoCard({ icon, title, detail, action, actionColor, tag }) {
+// Engagement health check card — always surfaces after filter applied
+function EngagementHealthCard({ engagedCount, totalCount, engRate, regionLang, primaryRegion }) {
+  const statBox = (value, label) => (
+    <div style={{flex:1,padding:'8px 10px',background:'#fff',border:'1px solid #E9ECF3',borderRadius:8,textAlign:'center'}}>
+      <div style={{fontFamily:'Jost',fontSize:16,fontWeight:600,color:'#111125',lineHeight:1}}>{value}</div>
+      <div style={{fontFamily:'DM Sans',fontSize:10,color:'#9AA2B1',marginTop:3,lineHeight:1.3}}>{label}</div>
+    </div>
+  );
   return (
-    <div style={{border:'1px solid #E9ECF3',borderRadius:10,overflow:'hidden',background:'#fff'}}>
-      <div style={{padding:'10px 12px',display:'flex',alignItems:'flex-start',gap:10}}>
-        <div style={{width:30,height:30,borderRadius:8,background:actionColor+'18',display:'grid',placeItems:'center',flexShrink:0}}>
-          <Icon name={icon} size={14} color={actionColor}/>
+    <div style={{border:'1px solid #DBE9FF',borderRadius:10,overflow:'hidden',background:'#F4F8FF'}}>
+      <div style={{padding:'9px 12px',borderBottom:'1px solid #DBE9FF',display:'flex',alignItems:'center',gap:7}}>
+        <div style={{width:22,height:22,borderRadius:5,background:'#4285F4',display:'grid',placeItems:'center',flexShrink:0}}>
+          <Icon name="users" size={11} color="#fff"/>
         </div>
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
-            <span style={{fontFamily:'DM Sans',fontSize:11.5,fontWeight:700,color:'#111125'}}>{title}</span>
-            {tag && <span style={{padding:'1px 6px',borderRadius:999,background:actionColor+'18',color:actionColor,fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}}>{tag}</span>}
-          </div>
-          <div style={{fontFamily:'DM Sans',fontSize:11,color:'#6F7482',lineHeight:1.5}}>{detail}</div>
-        </div>
+        <span style={{fontFamily:'DM Sans',fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#3160B7'}}>
+          Engagement health check
+        </span>
       </div>
-      <div style={{padding:'8px 12px',borderTop:'1px solid #F2F3F8',background:'#FAFBFD'}}>
-        <button style={{
-          display:'inline-flex',alignItems:'center',gap:5,padding:'5px 10px',
-          background:actionColor,color:'#fff',border:0,borderRadius:5,
-          fontFamily:'DM Sans',fontSize:11,fontWeight:600,cursor:'pointer',whiteSpace:'nowrap',
-        }}>
-          <Icon name="sparkle" size={10} color="#fff"/> {action}
-        </button>
+      <div style={{padding:'10px 12px',display:'flex',flexDirection:'column',gap:10}}>
+        <div style={{fontFamily:'DM Sans',fontSize:12,color:'#2C2C2C',lineHeight:1.6}}>
+          <span style={{fontWeight:700,color:'#111125'}}>{engRate}%</span>
+          {' '}of your matched users{regionLang ? <span style={{color:'#4285F4'}}>{' '}in {regionLang}</span> : ''} are currently engaged{' '}
+          <span style={{color:'#6F7482'}}>({engagedCount} of {totalCount})</span>.
+        </div>
+        <div style={{display:'flex',gap:6}}>
+          {statBox(engagedCount, 'Engaged')}
+          {statBox(totalCount, 'Total matched')}
+          {statBox(engRate + '%', 'Eng. rate')}
+          {statBox(primaryRegion, 'Primary region')}
+        </div>
       </div>
     </div>
   );
 }
 
-// ActionNeededCard — used for external recruitment gaps (no channels, no budget)
-function ActionNeededCard({ lang, region, gapCount, currentCount, targetCount, note }) {
+// Action Needed card — recruitment gap (no channel / budget)
+function ActionNeededCard({ lang, region, gapCount, currentCount, targetCount }) {
   const rows = [
-    { label:'Language', value: lang },
-    region ? { label:'Region', value: region } : null,
-    { label:'Current pool', value: currentCount + ' labellers' },
-    targetCount > 0 ? { label:'Target', value: targetCount + ' labellers' } : null,
-    { label:'Gap', value: gapCount > 0 ? '+' + gapCount + ' needed' : 'Below threshold' },
-  ].filter(Boolean);
-
+    { label:'Language',     value: lang },
+    { label:'Region',       value: region || 'Global' },
+    { label:'Current pool', value: currentCount + ' users' },
+    { label:'Target',       value: targetCount + ' users' },
+    { label:'Gap',          value: '+' + gapCount + ' needed', accent: true },
+  ];
   return (
     <div style={{border:'1.5px solid #EDE9FE',borderRadius:10,overflow:'hidden',background:'#fff'}}>
-      <div style={{
-        padding:'7px 12px',background:'#F5F3FF',borderBottom:'1px solid #EDE9FE',
-        display:'flex',alignItems:'center',justifyContent:'space-between',
-      }}>
+      <div style={{padding:'7px 12px',background:'#F5F3FF',borderBottom:'1px solid #EDE9FE',display:'flex',alignItems:'center',justifyContent:'space-between'}}>
         <div style={{display:'flex',alignItems:'center',gap:6}}>
           <Icon name="alert-circle" size={11} color="#7C3AED"/>
-          <span style={{fontFamily:'DM Sans',fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#7C3AED'}}>
-            Action Needed
-          </span>
+          <span style={{fontFamily:'DM Sans',fontSize:10,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#7C3AED'}}>Action Needed</span>
         </div>
-        <span style={{padding:'1px 7px',borderRadius:999,background:'#EDE9FE',color:'#6D28D9',fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}}>
-          Recruitment
-        </span>
+        <span style={{padding:'1px 7px',borderRadius:999,background:'#EDE9FE',color:'#6D28D9',fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}}>Recruitment</span>
       </div>
-      <div style={{padding:'10px 12px',display:'flex',flexDirection:'column',gap:6}}>
-        <div style={{fontFamily:'Jost',fontSize:13.5,fontWeight:600,color:'#111125',marginBottom:2}}>
-          Recruit {gapCount > 0 ? gapCount : 'more'} {lang} labellers
+      <div style={{padding:'10px 12px',display:'flex',flexDirection:'column',gap:5}}>
+        <div style={{fontFamily:'Jost',fontSize:13,fontWeight:600,color:'#111125',marginBottom:2}}>
+          Recruit {gapCount} more {lang} labellers
         </div>
-        <div style={{display:'flex',flexDirection:'column',gap:4}}>
-          {rows.map(function(row, i) {
-            const isGap = row.label === 'Gap';
-            return (
-              <div key={i} style={{display:'grid',gridTemplateColumns:'88px 1fr',gap:6,alignItems:'baseline'}}>
-                <span style={{fontFamily:'DM Sans',fontSize:10.5,color:'#9AA2B1',fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}>
-                  {row.label}
-                </span>
-                <span style={{fontFamily:'DM Sans',fontSize:11.5,fontWeight: isGap ? 700 : 500,color: isGap ? '#7C3AED' : '#111125'}}>
-                  {row.value}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-        {note && (
-          <div style={{marginTop:4,padding:'5px 8px',background:'#F5F3FF',borderRadius:6,fontFamily:'DM Sans',fontSize:10.5,color:'#6D28D9',lineHeight:1.5}}>
-            {note}
-          </div>
-        )}
+        {rows.map(function(row, i) {
+          return (
+            <div key={i} style={{display:'grid',gridTemplateColumns:'80px 1fr',gap:6,alignItems:'baseline'}}>
+              <span style={{fontFamily:'DM Sans',fontSize:10,color:'#9AA2B1',fontWeight:600,textTransform:'uppercase',letterSpacing:'.04em'}}>{row.label}</span>
+              <span style={{fontFamily:'DM Sans',fontSize:11.5,fontWeight:row.accent?700:500,color:row.accent?'#7C3AED':'#111125'}}>{row.value}</span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 function AIRecommendations({ filters, users, headcount }) {
-  if(!filters || Object.keys(filters).every(k=>!filters[k]||(Array.isArray(filters[k])&&!filters[k].length))) {
+  const hasFilters = filters && Object.keys(filters).some(k =>
+    Array.isArray(filters[k]) ? filters[k].length > 0 : !!filters[k]
+  );
+
+  if(!hasFilters) {
     return (
       <aside style={{width:248,flexShrink:0,background:'#fff',border:'1px solid #E9ECF3',borderRadius:12,padding:'20px 16px',alignSelf:'flex-start'}}>
         <div style={{fontFamily:'DM Sans',fontSize:14,fontWeight:700,color:'#111125',marginBottom:4}}>Recommendation</div>
@@ -338,80 +322,47 @@ function AIRecommendations({ filters, users, headcount }) {
     );
   }
 
-  const existingRecos = [];
-  const externalRecos = [];
   const hc = parseInt(headcount) || 0;
 
-  // ── Existing users analysis ──────────────────────────────────
-  const inactive = users.filter(u => u.stage === 'Registered' || u.stage === 'Onboarded' || u.stage === 'Churned');
-  const inactiveRate = users.length > 0 ? inactive.length / users.length : 0;
-  const avgAcc = users.length > 0 ? users.reduce((s,u)=>s+u.acc,0)/users.length : 0;
-  const countries = (filters.country||[]).join(', ') || '';
+  // ── Engagement health ────────────────────────────────────────
+  const engaged = users.filter(u => u.stage === 'Engaged');
+  const engRate = users.length > 0 ? Math.round(engaged.length / users.length * 100) : 0;
+  const countryList = filters.country || [];
+  const langList = filters.lang || [];
+  const regionLang = [
+    countryList.length > 0 ? countryList.join(' / ') : null,
+    langList.length > 0 ? langList.join(' / ') : null,
+  ].filter(Boolean).join(' · ');
+  const primaryRegion = countryList.length === 1 ? countryList[0]
+    : countryList.length > 1 ? countryList[0] + ' +' + (countryList.length-1)
+    : 'Global';
 
-  if(inactive.length > 0 && inactiveRate >= 0.2) {
-    existingRecos.push({
-      icon:'users', tag:'Re-engagement',
-      actionColor:'#4285F4',
-      title: inactive.length + ' inactive users' + (countries ? ' in ' + countries : ''),
-      detail: Math.round(inactiveRate*100) + '% of matched users are Registered/Onboarded/Churned. A targeted re-engagement campaign (SMS + in-app push) could reactivate this pool.',
-      action:'Launch campaign',
-    });
-  }
-
-  if(avgAcc > 0 && avgAcc < 80) {
-    existingRecos.push({
-      icon:'target', tag:'Penalty',
-      actionColor:'#F44336',
-      title:'Low accuracy: avg ' + avgAcc.toFixed(1) + '%',
-      detail:'Segment average is below the 80% threshold. Apply performance penalty rules to flag underperformers and trigger corrective flows.',
-      action:'Apply penalty rules',
-    });
-  } else if(avgAcc >= 80 && avgAcc < 85) {
-    existingRecos.push({
-      icon:'star', tag:'Treasure Hunt',
-      actionColor:'#F59E0B',
-      title:'Accuracy borderline: avg ' + avgAcc.toFixed(1) + '%',
-      detail:'Users are near the quality threshold. Launch a Treasure Hunting programme — gamified quality tasks with bonus rewards — to push accuracy above 85%.',
-      action:'Launch Treasure Hunt',
-    });
-  }
-
-  // ── External / Recruitment gaps ──────────────────────────────
-  // Language-based gap: show Action Needed card per language
-  if(filters.lang && filters.lang.length > 0) {
-    filters.lang.forEach(function(lang) {
-      const pool = LANG_POOL[lang] || 0;
-      const gap = hc > 0 ? Math.max(0, hc - pool) : (pool < 100 ? Math.round(100 - pool * 0.6) : 0);
-      if(gap > 0 || pool < 150) {
-        externalRecos.push({
-          type:'action-needed',
-          lang: lang,
-          region: countries || null,
-          gapCount: gap > 0 ? gap : Math.max(0, 150 - pool),
-          currentCount: pool,
-          targetCount: hc > 0 ? hc : 150,
-          note: pool < 100 ? lang + ' pool is below minimum viable size for task allocation.' : null,
-        });
-      }
-    });
-  }
-
-  // Headcount gap across entire segment
+  // ── Recruitment gaps — only when headcount set and segment falls short ──
+  const recruitmentGaps = [];
   if(hc > 0 && users.length < hc) {
-    const gap = hc - users.length;
-    const langLabel = (filters.lang && filters.lang.length > 0) ? filters.lang.join(', ') : 'any language';
-    externalRecos.push({
-      type:'action-needed',
-      lang: langLabel,
-      region: countries || null,
-      gapCount: gap,
-      currentCount: users.length,
-      targetCount: hc,
-      note: 'Segment matches only ' + users.length + ' of ' + hc + ' required. Broaden country or language scope to fill this gap.',
-    });
+    if(langList.length > 0) {
+      langList.forEach(function(lang) {
+        const langUsers = users.filter(u => u.lang.includes(lang));
+        recruitmentGaps.push({
+          lang,
+          region: countryList.join(', ') || 'Global',
+          currentCount: langUsers.length,
+          targetCount: hc,
+          gapCount: Math.max(0, hc - langUsers.length),
+        });
+      });
+    } else {
+      recruitmentGaps.push({
+        lang: 'All languages',
+        region: countryList.join(', ') || 'Global',
+        currentCount: users.length,
+        targetCount: hc,
+        gapCount: hc - users.length,
+      });
+    }
   }
 
-  const totalActions = existingRecos.length + externalRecos.length;
+  const totalActions = 1 + recruitmentGaps.length; // engagement card always counts
 
   return (
     <aside style={{width:248,flexShrink:0,background:'#F7F8FB',border:'1px solid #E9ECF3',borderRadius:12,overflow:'hidden',alignSelf:'flex-start',display:'flex',flexDirection:'column'}}>
@@ -426,25 +377,30 @@ function AIRecommendations({ filters, users, headcount }) {
       </div>
 
       <div style={{padding:'12px',display:'flex',flexDirection:'column',gap:8,overflow:'auto'}}>
-        {existingRecos.length > 0 && (
+        {/* (1) Existing users — engagement health check */}
+        <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px'}}>
+          Existing users
+        </div>
+        <EngagementHealthCard
+          engagedCount={engaged.length}
+          totalCount={users.length}
+          engRate={engRate}
+          regionLang={regionLang}
+          primaryRegion={primaryRegion}
+        />
+
+        {/* (2) Recruitment gaps — only when headcount target set */}
+        {recruitmentGaps.length > 0 && (
           <>
-            <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px'}}>
-              Existing users ({users.length} matched)
-            </div>
-            {existingRecos.map(function(r,i){ return React.createElement(RecoCard, Object.assign({key:'e'+i}, r)); })}
-          </>
-        )}
-        {externalRecos.length > 0 && (
-          <>
-            <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px',marginTop:existingRecos.length>0?4:0}}>
+            <div style={{fontFamily:'DM Sans',fontSize:9.5,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',color:'#9AA2B1',padding:'2px 2px',marginTop:4}}>
               Recruitment gaps
             </div>
-            {externalRecos.map(function(r,i){ return React.createElement(ActionNeededCard, Object.assign({key:'x'+i}, r)); })}
+            {recruitmentGaps.map(function(r,i){ return React.createElement(ActionNeededCard, Object.assign({key:'x'+i}, r)); })}
           </>
         )}
-        {totalActions === 0 && (
-          <div style={{padding:'16px',textAlign:'center',fontFamily:'DM Sans',fontSize:12,color:'#9AA2B1'}}>
-            No specific actions recommended for this segment.
+        {recruitmentGaps.length === 0 && hc > 0 && users.length >= hc && (
+          <div style={{padding:'10px 12px',background:'#E8F6EC',border:'1px solid #BBE7C6',borderRadius:8,fontFamily:'DM Sans',fontSize:11.5,color:'#15803D',lineHeight:1.5}}>
+            ✓ Segment meets headcount target ({users.length} / {hc})
           </div>
         )}
       </div>
